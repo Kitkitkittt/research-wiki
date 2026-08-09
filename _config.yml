@@ -1,0 +1,18 @@
+title: Research Wiki
+description: Public guides, skills, plugin templates, and MCP patterns for evidence-first research agents.
+url: https://kitkitkittt.github.io
+baseurl: /research-wiki
+repository: Kitkitkittt/research-wiki
+markdown: kramdown
+permalink: pretty
+plugins:
+  - jekyll-relative-links
+relative_links:
+  enabled: true
+  collections: true
+exclude:
+  - scripts
+  - AGENTS.md
+  - CONTRIBUTING.md
+  - Gemfile
+  - Gemfile.lock

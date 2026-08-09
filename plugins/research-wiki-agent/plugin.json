@@ -1,0 +1,8 @@
+{
+  "schemaVersion": "1.0",
+  "name": "research-wiki-agent",
+  "version": "0.1.0",
+  "description": "Evidence-first research skills and a remote MCP placeholder.",
+  "mcp": "mcp.json",
+  "skills": "skills"
+}
