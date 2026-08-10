@@ -6,7 +6,7 @@ permalink: /docs/mcp-tool-contract/
 
 # MCP tool contract
 
-A public MCP tool catalog should define one versioned source for server registration, client discovery, generated documentation, skills, and conformance tests.
+This page is recommended design guidance for operators building an MCP service. This repository does not publish a live server or authoritative tool catalog. A deployment's own versioned catalog remains the source for server registration, client discovery, generated documentation, skills, and conformance tests.
 
 ## Tool fields
 

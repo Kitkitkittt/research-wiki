@@ -1,6 +1,6 @@
 # Research Wiki
 
-Research Wiki is a public reference for building evidence-first research agents. It publishes reusable skills, an agent-plugin template, MCP setup guidance, and documentation for grounded research workflows.
+Research Wiki is a deployment-neutral public reference for building evidence-first research agents. It publishes reusable skills, portable MCP/client source files, setup guidance, and documentation for grounded research workflows. It does not include a hosted MCP server, credentials, or a directly installable vendor plugin.
 
 ## Start here
 
@@ -25,7 +25,11 @@ Research Wiki is a public reference for building evidence-first research agents.
 python3 scripts/validate_public.py
 ```
 
-The public source and validator are dependency-free. GitHub Pages builds the Markdown with its maintained Jekyll action after validation; the workflow is the reproducible build contract.
+The public source and validator are dependency-free. GitHub Pages builds the Markdown after validation; the workflow is the reproducible build contract. After deployment, verify the rendered routes with:
+
+```bash
+python3 scripts/validate_public.py --site-url https://kitkitkittt.github.io/research-wiki/
+```
 
 ## Contributing
 

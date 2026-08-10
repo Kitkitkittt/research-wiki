@@ -8,7 +8,8 @@ permalink: /
 <section class="hero">
   <div class="eyebrow">OPEN RESEARCH INFRASTRUCTURE</div>
   <h1>Research that keeps<br><span>evidence attached.</span></h1>
-  <p class="lede">Research Wiki is a public frontpage for agent skills, MCP integration patterns, plugin templates, and practical guidance for building research systems that can show their work.</p>
+  <p class="lede">Research Wiki is a deployment-neutral reference for agent skills, MCP integration patterns, portable source templates, and practical guidance for building research systems that can show their work.</p>
+  <p class="boundary"><strong>Reference boundary:</strong> this site hosts documentation and reusable files. It does not host an MCP server, issue credentials, or provide a directly installable client plugin.</p>
   <div class="actions">
     <a class="button primary" href="{{ '/guides/quickstart/' | relative_url }}">Start with the guide</a>
     <a class="button secondary" href="{{ '/skills/' | relative_url }}">Browse agent skills</a>
@@ -43,9 +44,9 @@ permalink: /
     </a>
     <a class="card accent-three" href="{{ '/plugins/' | relative_url }}">
       <span class="card-index">03</span>
-      <h3>Plugin template</h3>
-      <p>Package skills and a remote MCP definition without embedding credentials or deployment-specific data.</p>
-      <span class="card-link">Open plugin guide</span>
+      <h3>Portable source template</h3>
+      <p>Copy skills and a remote MCP definition, then adapt them through a named client's custom-integration mechanism.</p>
+      <span class="card-link">Open template guide</span>
     </a>
     <a class="card accent-four" href="{{ '/docs/' | relative_url }}">
       <span class="card-index">04</span>

@@ -1,11 +1,16 @@
 from __future__ import annotations
 
+import argparse
 import hashlib
 import json
 import re
+import shutil
 import sys
+import time
 from pathlib import Path
-from urllib.parse import unquote, urlsplit
+from urllib.error import HTTPError, URLError
+from urllib.parse import unquote, urljoin, urlsplit
+from urllib.request import Request, urlopen
 
 ROOT = Path(__file__).resolve().parents[1]
 SKIP_PARTS = {".git", "_site", "vendor", "__pycache__"}
@@ -25,8 +30,33 @@ FORBIDDEN_TOKEN_SHA256 = {
     "9b04b2f1f6921bc4866c138a6c93d74973b65f04bf961ec2fa5a5e6da2133725",
 }
 TOKEN = re.compile(r"[A-Za-z0-9.-]+")
-LINK = re.compile(r"(?<!!)\[[^\]]+\]\(([^)]+)\)")
+MARKDOWN_LINK = re.compile(r"(?<!!)\[[^\]]+\]\(([^)]+)\)")
+HTML_LINK = re.compile(r"\b(?:href|src)=[\"']([^\"']+)[\"']", re.IGNORECASE)
+LIQUID_LINK = re.compile(r"\{\{\s*['\"]([^'\"]+)['\"]\s*\|\s*relative_url\s*\}\}")
 FRONT_MATTER = re.compile(r"\A---\n(.*?)\n---\n", re.DOTALL)
+EXPLICIT_ANCHOR = re.compile(r"\{#([a-z0-9_-]+)\}")
+HTML_ANCHOR = re.compile(r"\bid=[\"']([a-zA-Z0-9_-]+)[\"']")
+HEADING = re.compile(r"^#{1,6}\s+(.+?)\s*$", re.MULTILINE)
+SKILL_NAMES = tuple(
+    path.parent.name for path in sorted(ROOT.glob("skills/*/SKILL.md"))
+)
+DEPLOYED_ROUTES = (
+    "./",
+    "guides/",
+    "guides/quickstart/",
+    "guides/mcp-setup/",
+    "skills/",
+    "skills/reference/",
+    "plugins/",
+    "plugins/research-wiki-agent/",
+    "docs/",
+    "security/",
+    "contributing/",
+    "404.html",
+)
+DEPLOYED_DOWNLOADS = tuple(
+    f"downloads/skills/{name}/SKILL.md" for name in SKILL_NAMES
+)
 
 
 def files() -> list[Path]:
@@ -140,16 +170,53 @@ def link_target(path: Path, raw: str) -> Path | None:
     return target.resolve()
 
 
-def target_exists(target: Path) -> bool:
+def target_source(target: Path) -> Path | None:
     try:
         target.relative_to(ROOT.resolve())
     except ValueError:
-        return False
-    if target.exists():
-        return True
+        return None
+    try:
+        relative = target.relative_to((ROOT / "downloads" / "skills").resolve())
+        if relative.parts[-1:] == ("SKILL.md",) and len(relative.parts) == 2:
+            canonical = ROOT / "skills" / relative.parts[0] / "SKILL.md"
+            if canonical.is_file():
+                return canonical
+    except ValueError:
+        pass
+    if target.exists() and target.is_file():
+        return target
     if target.suffix:
-        return False
-    return target.with_suffix(".md").exists() or (target / "index.md").exists()
+        return None
+    if target.with_suffix(".md").is_file():
+        return target.with_suffix(".md")
+    if (target / "index.md").is_file():
+        return target / "index.md"
+    return None
+
+
+def target_exists(target: Path) -> bool:
+    if target.exists() and target.is_dir():
+        try:
+            target.relative_to(ROOT.resolve())
+            return True
+        except ValueError:
+            return False
+    return target_source(target) is not None
+
+
+def heading_anchor(value: str) -> str:
+    value = re.sub(r"\s*\{#[^}]+\}\s*$", "", value).strip().casefold()
+    value = re.sub(r"<[^>]+>", "", value)
+    value = re.sub(r"[^\w\s-]", "", value)
+    return re.sub(r"[-\s]+", "-", value).strip("-")
+
+
+def anchors(path: Path) -> set[str]:
+    text = path.read_text(encoding="utf-8")
+    values = set(EXPLICIT_ANCHOR.findall(text))
+    values.update(HTML_ANCHOR.findall(text))
+    values.update(anchor for heading in HEADING.findall(text) if (anchor := heading_anchor(heading)))
+    return values
 
 
 def validate_links(errors: list[str]) -> None:
@@ -157,29 +224,157 @@ def validate_links(errors: list[str]) -> None:
         if path.suffix not in {".md", ".html"}:
             continue
         text = path.read_text(encoding="utf-8")
-        for raw in LINK.findall(text):
+        links = {raw for raw in MARKDOWN_LINK.findall(text) if "{{" not in raw}
+        links.update(raw for raw in HTML_LINK.findall(text) if "{{" not in raw)
+        links.update(LIQUID_LINK.findall(text))
+        for raw in sorted(links):
             target = link_target(path, raw)
             if target is not None and not target_exists(target):
                 errors.append(f"broken link: {path.relative_to(ROOT)} -> {raw}")
+                continue
+            parsed = urlsplit(unquote(raw.strip().strip("<>")))
+            if not parsed.fragment:
+                continue
+            source = target_source(target) if target is not None else path
+            if source is not None and parsed.fragment not in anchors(source):
+                errors.append(f"broken anchor: {path.relative_to(ROOT)} -> {raw}")
+
+
+def validate_plugin_contract(errors: list[str]) -> None:
+    root = ROOT / "plugins" / "research-wiki-agent"
+    plugin_path = root / "plugin.json"
+    mcp_path = root / "mcp.json"
+    try:
+        plugin = json.loads(plugin_path.read_text(encoding="utf-8"))
+        mcp = json.loads(mcp_path.read_text(encoding="utf-8"))
+    except OSError as exc:
+        errors.append(f"required plugin artifact unavailable: {exc.filename}")
+        return
+    except json.JSONDecodeError:
+        return
+    required_plugin = {
+        "schemaVersion": "1.0",
+        "name": "research-wiki-agent",
+        "packageType": "portable-source-template",
+        "directInstall": False,
+        "mcp": "mcp.json",
+        "skills": "skills",
+    }
+    if any(plugin.get(key) != value for key, value in required_plugin.items()):
+        errors.append("plugin manifest does not match the public template contract")
+    if not isinstance(plugin.get("version"), str) or not plugin["version"].strip():
+        errors.append("plugin manifest requires a version")
+    server = mcp.get("mcpServers", {}).get("research-wiki", {})
+    if server != {
+        "type": "streamable-http",
+        "url": "https://<your-host>/mcp/",
+    }:
+        errors.append("MCP template does not match the public placeholder contract")
+    for field in ("mcp", "skills"):
+        target = root / str(plugin.get(field, ""))
+        if not target_exists(target.resolve()):
+            errors.append(f"plugin artifact missing: {field}")
 
 
 def validate_plugin_parity(errors: list[str]) -> None:
     plugin = ROOT / "plugins" / "research-wiki-agent" / "skills"
-    for canonical in sorted(ROOT.glob("skills/*/SKILL.md")):
-        bundled = plugin / canonical.parent.name / "SKILL.md"
-        if not bundled.exists():
-            errors.append(f"plugin skill missing: {bundled.relative_to(ROOT)}")
-        elif canonical.read_bytes() != bundled.read_bytes():
-            errors.append(f"plugin skill drift: {canonical.parent.name}")
+    canonical_skills = {
+        path.parent.name: path for path in sorted(ROOT.glob("skills/*/SKILL.md"))
+    }
+    bundled_skills = {
+        path.parent.name: path for path in sorted(plugin.glob("*/SKILL.md"))
+    }
+    if canonical_skills.keys() != bundled_skills.keys():
+        errors.append("canonical and bundled skill membership differ")
+    for name, canonical in canonical_skills.items():
+        bundled = bundled_skills.get(name)
+        if bundled is not None and canonical.read_bytes() != bundled.read_bytes():
+            errors.append(f"plugin skill drift: {name}")
+
+
+def export_skill_downloads(destination: Path) -> None:
+    root = destination.resolve()
+    if root == ROOT.resolve() or root == (ROOT / "skills").resolve():
+        raise ValueError("download export cannot overwrite canonical skills")
+    for name in SKILL_NAMES:
+        source = ROOT / "skills" / name / "SKILL.md"
+        target = root / "downloads" / "skills" / name / "SKILL.md"
+        target.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(source, target)
+
+
+def validate_deployed_site(site_url: str, errors: list[str]) -> None:
+    base = site_url.rstrip("/") + "/"
+    for route in DEPLOYED_ROUTES:
+        url = urljoin(base, route)
+        last_error = ""
+        for attempt in range(6):
+            try:
+                request = Request(url, headers={"User-Agent": "research-wiki-validator"})
+                with urlopen(request, timeout=20) as response:
+                    content_type = response.headers.get_content_type()
+                    body = response.read(16_384).casefold()
+                    expected_path = urlsplit(url).path.rstrip("/")
+                    final_path = urlsplit(response.geturl()).path.rstrip("/")
+                    if (
+                        response.status == 200
+                        and content_type == "text/html"
+                        and final_path == expected_path
+                        and b'<main id="content"' in body
+                    ):
+                        break
+                    last_error = (
+                        f"HTTP {response.status} {content_type} at {response.geturl()}"
+                    )
+            except (HTTPError, URLError, TimeoutError) as exc:
+                last_error = str(exc)
+            if attempt < 5:
+                time.sleep(5)
+        else:
+            errors.append(f"deployed route failed: {url}: {last_error}")
+    for route in DEPLOYED_DOWNLOADS:
+        url = urljoin(base, route)
+        name = Path(route).parent.name
+        expected = (ROOT / "skills" / name / "SKILL.md").read_bytes()
+        try:
+            request = Request(url, headers={"User-Agent": "research-wiki-validator"})
+            with urlopen(request, timeout=20) as response:
+                observed = response.read()
+                if response.status != 200 or observed != expected:
+                    errors.append(f"deployed skill download differs: {url}")
+        except (HTTPError, URLError, TimeoutError) as exc:
+            errors.append(f"deployed skill download failed: {url}: {exc}")
+    missing_url = urljoin(base, "validator-missing-page")
+    try:
+        request = Request(missing_url, headers={"User-Agent": "research-wiki-validator"})
+        with urlopen(request, timeout=20) as response:
+            errors.append(
+                f"deployed missing route returned HTTP {response.status}: {missing_url}"
+            )
+    except HTTPError as exc:
+        body = exc.read(16_384).casefold()
+        if exc.code != 404 or b"page not found" not in body or b'<main id="content"' not in body:
+            errors.append(f"custom 404 failed: {missing_url}: HTTP {exc.code}")
+    except (URLError, TimeoutError) as exc:
+        errors.append(f"custom 404 failed: {missing_url}: {exc}")
 
 
 def main() -> int:
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--site-url")
+    parser.add_argument("--export-downloads", type=Path)
+    arguments = parser.parse_args()
     errors: list[str] = []
     validate_json(errors)
     validate_public_text(errors)
     validate_front_matter(errors)
     validate_links(errors)
+    validate_plugin_contract(errors)
     validate_plugin_parity(errors)
+    if not errors and arguments.export_downloads:
+        export_skill_downloads(arguments.export_downloads)
+    if arguments.site_url:
+        validate_deployed_site(arguments.site_url, errors)
     if errors:
         for error in errors:
             print(error, file=sys.stderr)

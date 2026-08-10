@@ -6,9 +6,9 @@ permalink: /plugins/research-wiki-agent/
 
 # Research Wiki agent plugin
 
-This directory is a portable **template**, not a client-vendor package. Its contract is intentionally small:
+This directory contains portable **source files**, not a client-vendor package and not a direct-install artifact. Its local contract is intentionally small:
 
-- `plugin.json` identifies the package version and relative artifact locations;
+- `plugin.json` identifies the template version, `directInstall: false`, and relative artifact locations;
 - `mcp.json` supplies a remote Streamable HTTP placeholder;
 - `skills/*/SKILL.md` contains canonical agent process guidance;
 - authentication remains in the client or deployment environment.

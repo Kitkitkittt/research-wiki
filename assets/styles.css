@@ -52,6 +52,7 @@ h2 { font-size: clamp(2.3rem, 5vw, 4.4rem); margin: .4rem 0 1rem; }
 h3 { font-size: 1.45rem; margin: .5rem 0; }
 h4 { margin-top: 2.4rem; }
 .lede { max-width: 710px; color: var(--muted); font-size: clamp(1.05rem, 2vw, 1.35rem); line-height: 1.6; margin: 2rem 0; }
+.boundary { max-width: 710px; padding: 1rem 1.2rem; border-left: 5px solid var(--lime); background: var(--panel); }
 .actions { display: flex; flex-wrap: wrap; gap: .8rem; margin-top: 2.5rem; }
 .button { display: inline-flex; align-items: center; justify-content: center; min-height: 48px; padding: .75rem 1.15rem; text-decoration: none; border: 1px solid var(--ink); font-weight: 800; font-size: .9rem; transition: transform .15s, box-shadow .15s; }
 .button:hover { transform: translate(-2px,-2px); box-shadow: 4px 4px 0 var(--ink); }

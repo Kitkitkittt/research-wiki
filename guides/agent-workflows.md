@@ -43,4 +43,4 @@ Provide the model only authorized, bounded, citation-addressable evidence. Requi
 
 The workflow is complete when every material claim maps to current authorized evidence, every displayed number preserves its source dimensions, and every unsupported part is recorded as a limitation.
 
-Install the [evidence-first research skill](../skills/evidence-first-research/SKILL.md) as the default agent process.
+Review the [evidence-first research skill](../skills/reference.md#evidence-first-research), then download its canonical payload from the reference page when configuring a client.

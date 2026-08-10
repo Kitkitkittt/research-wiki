@@ -6,7 +6,7 @@ permalink: /docs/agent-plugin-contract/
 
 # Agent plugin contract
 
-An agent plugin is a portable package that points an AI client at a remote MCP server and supplies reusable skills.
+This repository's agent template is a portable set of source files that can point an AI client at an operator-supplied MCP server and provide reusable skills. It is not a universal or directly installable plugin format.
 
 ## Package boundary
 
@@ -21,7 +21,7 @@ It contains no credentials, private hosts, source data, tenant settings, deploym
 
 ## Compatibility
 
-The plugin, MCP tool catalog, and skills form one compatibility set. A skill must not advertise a tool absent from the active catalog. A tool's required scope and input contract must match every generated reference.
+In a real deployment, the adapted client package, MCP tool catalog, and skills form one compatibility set. A skill must not advertise a tool absent from the active catalog. A tool's required scope and input contract must match every generated reference. This public template deliberately names workflows rather than claiming a deployment-specific callable catalog.
 
 ## Installation responsibility
 

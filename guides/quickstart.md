@@ -34,4 +34,4 @@ Research Wiki separates the research experience into three layers:
 
 ## Next step
 
-Connect a client with the [MCP setup guide](mcp-setup.md), then install the [agent plugin](plugin-installation.md).
+If you have an operator-supplied service, connect a client with the [MCP setup guide](mcp-setup.md), then adapt the [portable source template](plugin-installation.md). Otherwise, browse the [human-readable skill reference](../skills/reference.md) and use the patterns without claiming a live integration.

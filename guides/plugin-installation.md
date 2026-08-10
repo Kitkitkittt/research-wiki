@@ -1,12 +1,12 @@
 ---
 layout: default
-title: Plugin installation
+title: Portable template adaptation
 permalink: /guides/plugin-installation/
 ---
 
-# Plugin installation
+# Portable template adaptation
 
-The public plugin template bundles agent guidance and a placeholder MCP definition. It does not contain credentials, private hosts, source documents, or deployment state. It is a client-neutral file contract; import its MCP and skill files through the custom-integration mechanisms supported by your client.
+The public template bundles agent guidance and a placeholder MCP definition. It does not contain credentials, private hosts, source documents, deployment state, or a vendor manifest. It is not directly installable: copy its MCP and skill source files through the documented custom-integration mechanisms of a named client.
 
 ## Package contents
 
@@ -27,11 +27,12 @@ research-wiki-agent/
 
 ## Configure
 
-1. Copy [`plugins/research-wiki-agent`](../plugins/research-wiki-agent/) into the plugin location supported by your AI client.
-2. Replace `https://<your-host>/mcp/` in `mcp.json` with the endpoint supplied by your operator.
-3. Configure authentication in the AI client or deployment integration, not in the plugin files.
-4. Enable the plugin for a new conversation.
-5. Ask the client to list available Research Wiki tools and describe the evidence-first workflow.
+1. Confirm that your named AI client supports custom remote MCP configuration and custom skill files. Stop if either mechanism is unavailable.
+2. Copy [`plugins/research-wiki-agent`](../plugins/research-wiki-agent/) to a temporary workspace, not directly into a vendor plugin directory.
+3. Replace `https://<your-host>/mcp/` in `mcp.json` with the endpoint supplied by your operator.
+4. Import `mcp.json` through the client's custom MCP mechanism and each `skills/*/SKILL.md` through its custom skill mechanism.
+5. Configure authentication in the AI client or deployment integration, not in the template files.
+6. Start a new conversation and ask the client to list available Research Wiki tools and describe the evidence-first workflow.
 
 ## Verify
 

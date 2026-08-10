@@ -20,6 +20,6 @@ permalink: /docs/
 
 ## Integration
 
-- [MCP tool contract](mcp-tool-contract.md)
-- [Agent plugin contract](agent-plugin-contract.md)
+- [MCP tool design guidance](mcp-tool-contract.md)
+- [Portable agent-template contract](agent-plugin-contract.md)
 - [Glossary](glossary.md)

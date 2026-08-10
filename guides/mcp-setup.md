@@ -6,7 +6,7 @@ permalink: /guides/mcp-setup/
 
 # MCP setup
 
-Research Wiki uses a remote MCP endpoint supplied by your deployment operator. Keep the endpoint and credential in the client configuration; plugin and skill packages contain neither.
+This static site does not operate an MCP service. To use these patterns with a client, obtain a remote MCP endpoint from your deployment operator. Keep the endpoint and credential in the client configuration; template and skill files contain neither.
 
 ## Required values
 

@@ -1,16 +1,16 @@
 ---
 layout: default
-title: Agent plugin
+title: Portable agent template
 permalink: /plugins/
 ---
 
-# Agent plugin
+# Portable agent template
 
-The [Research Wiki agent plugin](research-wiki-agent/) is a deployment-neutral starter package for AI clients that support bundled MCP configuration and skills.
+The [Research Wiki agent template](research-wiki-agent/) is a deployment-neutral directory of portable source files. It is not directly installable until a named client adapts the MCP and skill files through its supported custom-integration mechanisms.
 
 ## Included
 
-- a versioned plugin manifest;
+- a versioned local file-contract manifest with `directInstall: false`;
 - a remote MCP placeholder;
 - all eight public research, evidence-integrity, source-intake, and working-project skills;
 - no credentials or private deployment values.
