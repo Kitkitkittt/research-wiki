@@ -24,6 +24,7 @@ jobs:
         with:
           source: ./
           destination: ./_site
+      - run: sudo chown -R "$(id -u):$(id -g)" ./_site
       - run: python3 scripts/validate_public.py --export-downloads ./_site
       - uses: actions/upload-pages-artifact@7b1f4a764d45c48632c6b24a0339c27f5614fb0b
   deploy:
