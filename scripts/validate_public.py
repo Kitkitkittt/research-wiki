@@ -21,6 +21,9 @@ FORBIDDEN = {
         r"(?i)(?:api[_-]?key|token|secret|password)\s*[=:]\s*(?![<{][$]?).{8,}"
     ),
 }
+ALLOWED_PUBLIC_TOKEN_SHA256 = {
+    "9b04b2f1f6921bc4866c138a6c93d74973b65f04bf961ec2fa5a5e6da2133725",
+}
 FORBIDDEN_TOKEN_SHA256 = {
     "985d577523f0aa08255b7673c8136cfd32237e76c189abf24d404953d658b601",
     "c2da6507fafc42afbf2baff0fc02ca5f1a183402a929479223cf96a840b1c929",
@@ -46,6 +49,7 @@ AGENT_SOURCE_PATHS = (
     Path("skills/index.md"),
     Path("skills/reference.md"),
     *(Path("skills") / name / "SKILL.md" for name in SKILL_NAMES),
+    *(path.relative_to(ROOT) for path in sorted((ROOT / "skills").glob("*/schema.json"))),
     Path("plugins/index.md"),
     Path("plugins/research-wiki-agent/index.md"),
     Path("plugins/research-wiki-agent/plugin.json"),
@@ -53,6 +57,7 @@ AGENT_SOURCE_PATHS = (
 )
 AGENT_INDEX_ENTRIES = (
     ("Documentation overview", "docs/"),
+    ("Setup and discovery", "docs/setup-and-discovery/"),
     ("Evidence model", "docs/how-evidence-works/"),
     ("Authority and access", "docs/authority-and-access/"),
     ("Search and citations", "docs/search-and-citations/"),
@@ -73,6 +78,7 @@ DEPLOYED_ROUTES = (
     "guides/mcp-setup/",
     "skills/",
     "skills/reference/",
+    "docs/setup-and-discovery/",
     "plugins/",
     "plugins/research-wiki-agent/",
     "docs/",
@@ -81,8 +87,28 @@ DEPLOYED_ROUTES = (
     "404.html",
 )
 DEPLOYED_AGENT_FILES = ("llms.txt", "llms-full.txt")
+PUBLIC_ALIAS_ROUTES = tuple(
+    route for route in DEPLOYED_ROUTES if route not in {"./", "404.html"}
+)
+DEPLOYED_SKILL_FILES = tuple(
+    (f"skills/{name}/SKILL.md", Path("skills") / name / "SKILL.md")
+    for name in SKILL_NAMES
+) + tuple(
+    (f"skills/{path.parent.name}/schema.json", path.relative_to(ROOT))
+    for path in sorted((ROOT / "skills").glob("*/schema.json"))
+)
 DEPLOYED_DOWNLOADS = tuple(
-    f"downloads/skills/{name}/SKILL.md" for name in SKILL_NAMES
+    (f"downloads/skills/{name}/SKILL.md", Path("skills") / name / "SKILL.md")
+    for name in SKILL_NAMES
+)
+PUBLIC_ALIAS_FILES = (
+    *(
+        (route, source, "application/json" if source.suffix == ".json" else "text/markdown")
+        for route, source in DEPLOYED_SKILL_FILES
+        if source.parts[:2] == ("skills", "setup-and-discovery")
+    ),
+    *((route, source, "text/markdown") for route, source in DEPLOYED_DOWNLOADS),
+    *((route, Path(route), "text/plain") for route in DEPLOYED_AGENT_FILES),
 )
 
 
@@ -98,10 +124,14 @@ def files() -> list[Path]:
 def secret_like(key: str) -> bool:
     normalized = key.casefold().replace("-", "_")
     return normalized in {
+        "access_token",
         "api_key",
         "apikey",
         "authorization",
+        "bearer_token",
+        "client_secret",
         "password",
+        "private_key",
         "secret",
         "token",
     }
@@ -114,8 +144,8 @@ def inspect_json(value: object, path: Path, errors: list[str]) -> None:
                 secret_like(str(key))
                 and isinstance(child, str)
                 and child.strip()
-                and "<your-token>" not in child
-                and "${" not in child
+                and child.strip() != "<your-token>"
+                and re.fullmatch(r"\$\{[A-Z][A-Z0-9_]*\}", child.strip()) is None
             ):
                 errors.append(f"secret-like JSON value: {path.relative_to(ROOT)}")
             inspect_json(child, path, errors)
@@ -152,13 +182,24 @@ def validate_public_text(errors: list[str]) -> None:
         forbidden_tokens = [
             token
             for token in TOKEN.findall(text.casefold())
-            if hashlib.sha256(token.encode()).hexdigest()
-            in FORBIDDEN_TOKEN_SHA256
+            if (
+                (digest := hashlib.sha256(token.encode()).hexdigest())
+                in FORBIDDEN_TOKEN_SHA256
+                and digest not in ALLOWED_PUBLIC_TOKEN_SHA256
+            )
         ]
         if forbidden_tokens:
             errors.append(
                 f"internal name: {path.relative_to(ROOT)}"
             )
+
+
+def validate_scanner_policy(errors: list[str]) -> None:
+    forbidden_brand = hashlib.sha256(bytes((118, 99, 105))).hexdigest()
+    if forbidden_brand not in FORBIDDEN_TOKEN_SHA256:
+        errors.append("forbidden brand scanner policy missing")
+    if forbidden_brand in ALLOWED_PUBLIC_TOKEN_SHA256:
+        errors.append("forbidden brand scanner policy allowlisted")
 
 
 def validate_front_matter(errors: list[str]) -> None:
@@ -317,14 +358,22 @@ def validate_plugin_parity(errors: list[str]) -> None:
         bundled = bundled_skills.get(name)
         if bundled is not None and canonical.read_bytes() != bundled.read_bytes():
             errors.append(f"plugin skill drift: {name}")
+    for canonical in sorted(ROOT.glob("skills/*/schema.json")):
+        bundled = plugin / canonical.parent.name / "schema.json"
+        if not bundled.is_file():
+            errors.append(f"plugin skill schema missing: {canonical.parent.name}")
+        elif canonical.read_bytes() != bundled.read_bytes():
+            errors.append(f"plugin skill schema drift: {canonical.parent.name}")
 
 
 def public_site_url() -> str:
     values: dict[str, str] = {}
     for line in (ROOT / "_config.yml").read_text(encoding="utf-8").splitlines():
         key, separator, value = line.partition(":")
-        if separator and key in {"url", "baseurl"}:
+        if separator and key in {"url", "baseurl", "public_url"}:
             values[key] = value.strip().strip("'\"")
+    if values.get("public_url"):
+        return values["public_url"].rstrip("/") + "/"
     if not values.get("url"):
         raise ValueError("_config.yml requires url for agent artifacts")
     return values["url"].rstrip("/") + "/" + values.get("baseurl", "").strip("/") + "/"
@@ -447,7 +496,14 @@ def export_skill_downloads(destination: Path) -> None:
         raise ValueError("download export cannot overwrite canonical skills")
     for name in SKILL_NAMES:
         source = ROOT / "skills" / name / "SKILL.md"
-        target = root / "downloads" / "skills" / name / "SKILL.md"
+        for target in (
+            root / "downloads" / "skills" / name / "SKILL.md",
+            root / "skills" / name / "SKILL.md",
+        ):
+            target.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copyfile(source, target)
+    for source in sorted((ROOT / "skills").glob("*/schema.json")):
+        target = root / source.relative_to(ROOT)
         target.parent.mkdir(parents=True, exist_ok=True)
         shutil.copyfile(source, target)
 
@@ -481,18 +537,17 @@ def validate_deployed_site(site_url: str, errors: list[str]) -> None:
                 time.sleep(5)
         else:
             errors.append(f"deployed route failed: {url}: {last_error}")
-    for route in DEPLOYED_DOWNLOADS:
+    for route, source in DEPLOYED_SKILL_FILES + DEPLOYED_DOWNLOADS:
         url = urljoin(base, route)
-        name = Path(route).parent.name
-        expected = (ROOT / "skills" / name / "SKILL.md").read_bytes()
+        expected = (ROOT / source).read_bytes()
         try:
             request = Request(url, headers={"User-Agent": "research-wiki-validator"})
             with urlopen(request, timeout=20) as response:
                 observed = response.read()
                 if response.status != 200 or observed != expected:
-                    errors.append(f"deployed skill download differs: {url}")
+                    errors.append(f"deployed skill file differs: {url}")
         except (HTTPError, URLError, TimeoutError) as exc:
-            errors.append(f"deployed skill download failed: {url}: {exc}")
+            errors.append(f"deployed skill file failed: {url}: {exc}")
     for route in DEPLOYED_AGENT_FILES:
         url = urljoin(base, route)
         expected = (ROOT / route).read_bytes()
@@ -519,9 +574,74 @@ def validate_deployed_site(site_url: str, errors: list[str]) -> None:
         errors.append(f"custom 404 failed: {missing_url}: {exc}")
 
 
+def validate_public_alias(site_url: str, errors: list[str]) -> None:
+    base = site_url.rstrip("/") + "/"
+    for route in PUBLIC_ALIAS_ROUTES:
+        url = urljoin(base, route)
+        last_error = ""
+        for attempt in range(6):
+            try:
+                request = Request(url, headers={"User-Agent": "research-wiki-validator"})
+                with urlopen(request, timeout=20) as response:
+                    body = response.read(16_384).lower()
+                    if (
+                        response.status == 200
+                        and response.headers.get_content_type() == "text/html"
+                        and urlsplit(response.geturl()).path.rstrip("/") == urlsplit(url).path.rstrip("/")
+                        and b'<main id="content"' in body
+                    ):
+                        break
+                    last_error = f"HTTP {response.status} {response.headers.get_content_type()} at {response.geturl()}"
+            except (HTTPError, URLError, TimeoutError) as exc:
+                last_error = str(exc)
+            if attempt < 5:
+                time.sleep(5)
+        else:
+            errors.append(f"public alias route failed: {url}: {last_error}")
+    for route, source, content_type in PUBLIC_ALIAS_FILES:
+        url = urljoin(base, route)
+        expected = (ROOT / source).read_bytes()
+        last_error = ""
+        for attempt in range(6):
+            try:
+                request = Request(url, headers={"User-Agent": "research-wiki-validator"})
+                with urlopen(request, timeout=20) as response:
+                    observed = response.read()
+                    if (
+                        response.status == 200
+                        and response.headers.get_content_type() == content_type
+                        and urlsplit(response.geturl()).path == urlsplit(url).path
+                        and observed == expected
+                    ):
+                        break
+                    last_error = f"HTTP {response.status} {response.headers.get_content_type()} at {response.geturl()}"
+            except (HTTPError, URLError, TimeoutError) as exc:
+                last_error = str(exc)
+            if attempt < 5:
+                time.sleep(5)
+        else:
+            errors.append(f"public alias file failed: {url}: {last_error}")
+    asset_url = urljoin(base, "research-wiki/assets/styles.css")
+    last_error = ""
+    for attempt in range(6):
+        try:
+            request = Request(asset_url, headers={"User-Agent": "research-wiki-validator"})
+            with urlopen(request, timeout=20) as response:
+                if response.status == 200 and response.headers.get_content_type() == "text/css":
+                    break
+                last_error = f"HTTP {response.status} {response.headers.get_content_type()}"
+        except (HTTPError, URLError, TimeoutError) as exc:
+            last_error = str(exc)
+        if attempt < 5:
+            time.sleep(5)
+    else:
+        errors.append(f"public alias asset failed: {asset_url}: {last_error}")
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--site-url")
+    parser.add_argument("--public-alias-url")
     parser.add_argument("--export-downloads", type=Path)
     parser.add_argument("--write-agent-files", action="store_true")
     arguments = parser.parse_args()
@@ -530,6 +650,7 @@ def main() -> int:
     errors: list[str] = []
     validate_json(errors)
     validate_public_text(errors)
+    validate_scanner_policy(errors)
     validate_front_matter(errors)
     validate_links(errors)
     validate_plugin_contract(errors)
@@ -539,6 +660,8 @@ def main() -> int:
         export_skill_downloads(arguments.export_downloads)
     if arguments.site_url:
         validate_deployed_site(arguments.site_url, errors)
+    if arguments.public_alias_url:
+        validate_public_alias(arguments.public_alias_url, errors)
     if errors:
         for error in errors:
             print(error, file=sys.stderr)

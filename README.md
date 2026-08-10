@@ -16,6 +16,8 @@ Research Wiki is a deployment-neutral public reference for building evidence-fir
 - Documentation index: [`llms.txt`](llms.txt)
 - Complete copy-ready context: [`llms-full.txt`](llms-full.txt)
 - Canonical skills: [`skills/`](skills/)
+- Setup skill: [`skills/setup-and-discovery/SKILL.md`](skills/setup-and-discovery/SKILL.md)
+- Setup schema: [`skills/setup-and-discovery/schema.json`](skills/setup-and-discovery/schema.json)
 
 Give an agent the deployed `llms.txt` URL for selective retrieval. The documentation UI also provides **Copy all for agent** for the complete public context.
 
@@ -37,6 +39,7 @@ The public source and validator are dependency-free. GitHub Pages builds the Mar
 
 ```bash
 python3 scripts/validate_public.py --site-url https://kitkitkittt.github.io/research-wiki/
+python3 scripts/validate_public.py --public-alias-url https://research.vnibb.xyz/
 ```
 
 ## Contributing

@@ -15,6 +15,9 @@ research-wiki-agent/
 ├── plugin.json
 ├── mcp.json
 └── skills/
+    ├── setup-and-discovery/
+    │   ├── SKILL.md
+    │   └── schema.json
     ├── evidence-first-research/SKILL.md
     ├── company-research/SKILL.md
     ├── financial-analysis/SKILL.md

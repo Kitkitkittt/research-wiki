@@ -1,7 +1,7 @@
 {
   "schemaVersion": "1.0",
   "name": "research-wiki-agent",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Portable evidence-first skill and MCP source-file template.",
   "packageType": "portable-source-template",
   "directInstall": false,

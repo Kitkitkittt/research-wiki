@@ -2,12 +2,27 @@
 layout: default
 title: Skill reference
 permalink: /skills/reference/
-description: Human-readable reference for the eight portable Research Wiki agent skills.
+description: Human-readable reference for the nine portable Research Wiki agent skills.
 ---
 
 # Skill reference
 
 These pages explain the canonical machine-readable skills without changing their payloads. Download the linked `SKILL.md` file when configuring a client.
+
+## Setup and discovery {#setup-and-discovery}
+
+Use for a first connection or to diagnose authentication, permissions, and capability readiness.
+
+1. Load the entry skill.
+2. Authenticate through the client.
+3. Read the capability matrix.
+4. List tools visible to the current identity.
+5. Select only ready capabilities and stop on typed errors.
+
+Completion requires successful scoped discovery without widening permissions or bypassing a disabled capability.
+
+- [Download canonical skill]({{ '/skills/setup-and-discovery/SKILL.md' | relative_url }})
+- [Open machine schema]({{ '/skills/setup-and-discovery/schema.json' | relative_url }})
 
 ## Evidence-first research {#evidence-first-research}
 

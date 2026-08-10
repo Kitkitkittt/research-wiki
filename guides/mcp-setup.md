@@ -6,11 +6,12 @@ permalink: /guides/mcp-setup/
 
 # MCP setup
 
-This static site does not operate an MCP service. To use these patterns with a client, obtain a remote MCP endpoint from your deployment operator. Keep the endpoint and credential in the client configuration; template and skill files contain neither.
+This site documents the hosted service and deployment-neutral MCP integration patterns. Keep credentials in the client configuration; template and skill files contain none.
 
 ## Required values
 
-- MCP endpoint: `https://<your-host>/mcp/`
+- Hosted endpoint: `https://research.vnibb.xyz/mcp/research-brain/`
+- Deployment-neutral endpoint: `https://<your-host>/mcp/research-brain/`
 - Authentication: the bearer or OAuth method published by your deployment
 - Client support: remote MCP over Streamable HTTP
 
@@ -23,7 +24,7 @@ Keep the trailing slash when the operator publishes one. Some clients drop autho
   "mcpServers": {
     "research-wiki": {
       "type": "streamable-http",
-      "url": "https://<your-host>/mcp/",
+      "url": "https://<your-host>/mcp/research-brain/",
       "headers": {
         "Authorization": "Bearer <your-token>"
       }

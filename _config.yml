@@ -2,6 +2,7 @@ title: Research Wiki
 description: Deployment-neutral guides, portable skills, source templates, and MCP patterns for evidence-first research agents.
 url: https://kitkitkittt.github.io
 baseurl: /research-wiki
+public_url: https://research.vnibb.xyz
 repository: Kitkitkittt/research-wiki
 markdown: kramdown
 permalink: pretty

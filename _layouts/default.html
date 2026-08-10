@@ -5,11 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="description" content="{{ page.description | default: site.description }}">
   <meta name="theme-color" content="#11130f">
-  <link rel="canonical" href="{{ page.url | absolute_url }}">
+  <link rel="canonical" href="{{ site.public_url }}{{ page.url }}">
   <meta property="og:type" content="website">
   <meta property="og:title" content="{% if page.title %}{{ page.title }} · {% endif %}{{ site.title }}">
   <meta property="og:description" content="{{ page.description | default: site.description }}">
-  <meta property="og:url" content="{{ page.url | absolute_url }}">
+  <meta property="og:url" content="{{ site.public_url }}{{ page.url }}">
   <title>{% if page.title %}{{ page.title }} · {% endif %}{{ site.title }}</title>
   <link rel="icon" href="{{ '/assets/mark.svg' | relative_url }}" type="image/svg+xml">
   <link rel="stylesheet" href="{{ '/assets/styles.css' | relative_url }}">
@@ -37,6 +37,7 @@
       <nav class="docs-nav" aria-label="Documentation sections">
         <span>Start here</span>
         <a{% if page.url == '/docs/' %} class="active" aria-current="page"{% endif %} href="{{ '/docs/' | relative_url }}">Overview</a>
+        <a{% if page.url == '/docs/setup-and-discovery/' %} class="active" aria-current="page"{% endif %} href="{{ '/docs/setup-and-discovery/' | relative_url }}">Setup and discovery</a>
         <a{% if page.url == '/docs/how-evidence-works/' %} class="active" aria-current="page"{% endif %} href="{{ '/docs/how-evidence-works/' | relative_url }}">How evidence works</a>
         <span>Core concepts</span>
         <a{% if page.url == '/docs/authority-and-access/' %} class="active" aria-current="page"{% endif %} href="{{ '/docs/authority-and-access/' | relative_url }}">Authority and access</a>
@@ -68,7 +69,7 @@
       <section class="docs-handoff">
         <span>HAND OFF TO AN AGENT</span>
         <p>Give an agent the documentation index URL for selective retrieval, or copy the complete public context bundle.</p>
-        <code>{{ site.url }}{{ site.baseurl }}/llms.txt</code>
+        <code>{{ site.public_url }}/llms.txt</code>
       </section>
     </article>
     <aside class="docs-toc" aria-label="On this page">

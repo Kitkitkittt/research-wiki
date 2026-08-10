@@ -11,6 +11,7 @@ This directory contains portable **source files**, not a client-vendor package a
 - `plugin.json` identifies the template version, `directInstall: false`, and relative artifact locations;
 - `mcp.json` supplies a remote Streamable HTTP placeholder;
 - `skills/*/SKILL.md` contains canonical agent process guidance;
+- `skills/setup-and-discovery/schema.json` describes its discovery response contract;
 - authentication remains in the client or deployment environment.
 
 ## Install

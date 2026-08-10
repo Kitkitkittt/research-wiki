@@ -8,6 +8,12 @@ permalink: /skills/
 
 Skills are portable process contracts for AI clients. Read the [human reference](reference.md), download canonical `SKILL.md` payloads individually, or copy them from the [portable source template](../plugins/). This site does not configure a client or host an MCP service.
 
+## Setup
+
+| Skill | Trigger | Completion criterion |
+| --- | --- | --- |
+| [Setup and discovery](reference.md#setup-and-discovery) | A client connects or diagnoses available capabilities | Authentication succeeds and only ready, permitted capabilities are selected |
+
 ## Research
 
 | Skill | Trigger | Completion criterion |

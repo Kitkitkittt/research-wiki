@@ -1,0 +1,44 @@
+{
+  "content_sha256": "92235c3af356e49a1c02c9f16665840f1ec6b2931ef4eb0633928b0363c9f2aa",
+  "content_hash_scope": "capability-registry-entry",
+  "input_schema_ref": null,
+  "mcp_tool_schemas": {
+    "system.describe_capabilities": {
+      "compact_response": true,
+      "description": "Describe active lanes, tools, limits, and blockers.",
+      "group": "Discovery",
+      "input_schema": {
+        "properties": {},
+        "title": "SystemDescribe_CapabilitiesInput",
+        "type": "object"
+      },
+      "name": "system.describe_capabilities",
+      "output_schema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "readiness": "ready",
+      "required_scope": "research:read",
+      "schema_version": "mcp-tool-descriptor-v2"
+    }
+  },
+  "mcp_tools": [
+    "system.describe_capabilities"
+  ],
+  "missing_mcp_tools": [],
+  "output_schema_ref": "runtime-capabilities-v1",
+  "permitted_lanes": [
+    "public",
+    "analyst"
+  ],
+  "required_scopes": [
+    "research:read"
+  ],
+  "rest_operations": [
+    "GET /api/research-brain/runtime/capabilities",
+    "GET /api/research-brain/mcp/catalog"
+  ],
+  "schema_version": "capability-skill-schema-v1",
+  "skill_id": "skill.setup-and-discovery",
+  "version": "1.1.0"
+}

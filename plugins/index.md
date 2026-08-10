@@ -12,7 +12,7 @@ The [Research Wiki agent template](research-wiki-agent/) is a deployment-neutral
 
 - a versioned local file-contract manifest with `directInstall: false`;
 - a remote MCP placeholder;
-- all eight public research, evidence-integrity, source-intake, and working-project skills;
+- nine public setup, research, evidence-integrity, source-intake, and working-project skills;
 - no credentials or private deployment values.
 
 Follow the [plugin installation guide](../guides/plugin-installation.md). The repository validator checks that bundled skills are byte-identical to the canonical skill directories.

@@ -13,6 +13,7 @@ permalink: /
   <div class="actions">
     <a class="button primary" href="{{ '/guides/quickstart/' | relative_url }}">Start with the guide</a>
     <a class="button secondary" href="{{ '/skills/' | relative_url }}">Browse agent skills</a>
+    <a class="button secondary" href="https://research.vnibb.xyz/">Open workspace</a>
   </div>
 </section>
 

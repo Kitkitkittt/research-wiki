@@ -11,6 +11,12 @@ Technical contracts and design guidance for evidence-first research systems. Ana
 
 > **Agent handoff:** give an agent the documentation index URL shown in the handoff panel. It can fetch only the relevant pages, canonical skills, or full bundle from that index.
 
+## Start here
+
+- [Setup and discovery](setup-and-discovery.md)
+- [Quick start](../guides/quickstart.md)
+- [MCP setup](../guides/mcp-setup.md)
+
 ## Foundations
 
 - [How evidence works](how-evidence-works.md)
