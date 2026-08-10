@@ -313,7 +313,7 @@ def validate_deployed_site(site_url: str, errors: list[str]) -> None:
                 request = Request(url, headers={"User-Agent": "research-wiki-validator"})
                 with urlopen(request, timeout=20) as response:
                     content_type = response.headers.get_content_type()
-                    body = response.read(16_384).casefold()
+                    body = response.read(16_384).lower()
                     expected_path = urlsplit(url).path.rstrip("/")
                     final_path = urlsplit(response.geturl()).path.rstrip("/")
                     if (
@@ -352,7 +352,7 @@ def validate_deployed_site(site_url: str, errors: list[str]) -> None:
                 f"deployed missing route returned HTTP {response.status}: {missing_url}"
             )
     except HTTPError as exc:
-        body = exc.read(16_384).casefold()
+        body = exc.read(16_384).lower()
         if exc.code != 404 or b"page not found" not in body or b'<main id="content"' not in body:
             errors.append(f"custom 404 failed: {missing_url}: HTTP {exc.code}")
     except (URLError, TimeoutError) as exc:
