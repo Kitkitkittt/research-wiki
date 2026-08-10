@@ -1,0 +1,32 @@
+# Research Wiki
+
+> Deployment-neutral public documentation for evidence-first research agents.
+
+Use this index to retrieve only the context needed for a task. This repository does not host an MCP server or credentials.
+
+## Documentation
+
+- [Documentation overview](https://kitkitkittt.github.io/research-wiki/docs/)
+- [Evidence model](https://kitkitkittt.github.io/research-wiki/docs/how-evidence-works/)
+- [Authority and access](https://kitkitkittt.github.io/research-wiki/docs/authority-and-access/)
+- [Search and citations](https://kitkitkittt.github.io/research-wiki/docs/search-and-citations/)
+- [Versioning and conflicts](https://kitkitkittt.github.io/research-wiki/docs/versioning-and-conflicts/)
+- [Table safety](https://kitkitkittt.github.io/research-wiki/docs/table-safety/)
+- [Security model](https://kitkitkittt.github.io/research-wiki/docs/security-model/)
+- [MCP design guidance](https://kitkitkittt.github.io/research-wiki/docs/mcp-tool-contract/)
+- [Portable agent template](https://kitkitkittt.github.io/research-wiki/docs/agent-plugin-contract/)
+- [Glossary](https://kitkitkittt.github.io/research-wiki/docs/glossary/)
+- [Guides](https://kitkitkittt.github.io/research-wiki/guides/)
+- [Skill reference](https://kitkitkittt.github.io/research-wiki/skills/reference/)
+- [Full public context](https://kitkitkittt.github.io/research-wiki/llms-full.txt)
+
+## Canonical skills
+
+- [citation-audit](https://kitkitkittt.github.io/research-wiki/downloads/skills/citation-audit/SKILL.md)
+- [company-research](https://kitkitkittt.github.io/research-wiki/downloads/skills/company-research/SKILL.md)
+- [evidence-first-research](https://kitkitkittt.github.io/research-wiki/downloads/skills/evidence-first-research/SKILL.md)
+- [financial-analysis](https://kitkitkittt.github.io/research-wiki/downloads/skills/financial-analysis/SKILL.md)
+- [period-comparison](https://kitkitkittt.github.io/research-wiki/downloads/skills/period-comparison/SKILL.md)
+- [source-intake](https://kitkitkittt.github.io/research-wiki/downloads/skills/source-intake/SKILL.md)
+- [table-reconstruction](https://kitkitkittt.github.io/research-wiki/downloads/skills/table-reconstruction/SKILL.md)
+- [working-project](https://kitkitkittt.github.io/research-wiki/downloads/skills/working-project/SKILL.md)

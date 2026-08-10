@@ -13,8 +13,9 @@
   <title>{% if page.title %}{{ page.title }} · {% endif %}{{ site.title }}</title>
   <link rel="icon" href="{{ '/assets/mark.svg' | relative_url }}" type="image/svg+xml">
   <link rel="stylesheet" href="{{ '/assets/styles.css' | relative_url }}">
+  <link rel="alternate" href="{{ '/llms.txt' | relative_url }}" type="text/plain" title="Agent documentation index">
 </head>
-<body>
+<body{% if page.url contains '/docs/' %} class="docs-body"{% endif %}>
   <a class="skip-link" href="#content">Skip to content</a>
   <header class="site-header">
     <a class="brand" href="{{ '/' | relative_url }}" aria-label="Research Wiki home">
@@ -29,12 +30,62 @@
       <a href="https://github.com/Kitkitkittt/research-wiki">GitHub</a>
     </nav>
   </header>
+  {% if page.url contains '/docs/' %}
+  <main id="content" class="docs-shell">
+    <aside class="docs-sidebar" aria-label="Documentation navigation">
+      <div class="docs-product"><span>DOCUMENTATION</span><strong>Research Wiki</strong><small>Reference · v0.1</small></div>
+      <nav class="docs-nav" aria-label="Documentation sections">
+        <span>Start here</span>
+        <a{% if page.url == '/docs/' %} class="active" aria-current="page"{% endif %} href="{{ '/docs/' | relative_url }}">Overview</a>
+        <a{% if page.url == '/docs/how-evidence-works/' %} class="active" aria-current="page"{% endif %} href="{{ '/docs/how-evidence-works/' | relative_url }}">How evidence works</a>
+        <span>Core concepts</span>
+        <a{% if page.url == '/docs/authority-and-access/' %} class="active" aria-current="page"{% endif %} href="{{ '/docs/authority-and-access/' | relative_url }}">Authority and access</a>
+        <a{% if page.url == '/docs/search-and-citations/' %} class="active" aria-current="page"{% endif %} href="{{ '/docs/search-and-citations/' | relative_url }}">Search and citations</a>
+        <a{% if page.url == '/docs/versioning-and-conflicts/' %} class="active" aria-current="page"{% endif %} href="{{ '/docs/versioning-and-conflicts/' | relative_url }}">Versioning and conflicts</a>
+        <a{% if page.url == '/docs/table-safety/' %} class="active" aria-current="page"{% endif %} href="{{ '/docs/table-safety/' | relative_url }}">Table safety</a>
+        <span>Integration</span>
+        <a{% if page.url == '/docs/security-model/' %} class="active" aria-current="page"{% endif %} href="{{ '/docs/security-model/' | relative_url }}">Security model</a>
+        <a{% if page.url == '/docs/mcp-tool-contract/' %} class="active" aria-current="page"{% endif %} href="{{ '/docs/mcp-tool-contract/' | relative_url }}">MCP design</a>
+        <a{% if page.url == '/docs/agent-plugin-contract/' %} class="active" aria-current="page"{% endif %} href="{{ '/docs/agent-plugin-contract/' | relative_url }}">Agent template</a>
+        <a{% if page.url == '/docs/glossary/' %} class="active" aria-current="page"{% endif %} href="{{ '/docs/glossary/' | relative_url }}">Glossary</a>
+      </nav>
+      <div class="docs-agent-access">
+        <span>AGENT ACCESS</span>
+        <a href="{{ '/llms.txt' | relative_url }}">Documentation index</a>
+        <a href="{{ '/llms-full.txt' | relative_url }}">Full context bundle</a>
+      </div>
+    </aside>
+    <article class="docs-content">
+      <div class="docs-toolbar">
+        <span>DOCS / {{ page.title | upcase }}</span>
+        <div>
+          <a href="{{ '/llms.txt' | relative_url }}">Agent link</a>
+          <button type="button" data-copy-handoff="{{ '/llms-full.txt' | relative_url }}">Copy all for agent</button>
+        </div>
+      </div>
+      <p class="copy-status" data-copy-status aria-live="polite"></p>
+      {{ content }}
+      <section class="docs-handoff">
+        <span>HAND OFF TO AN AGENT</span>
+        <p>Give an agent the documentation index URL for selective retrieval, or copy the complete public context bundle.</p>
+        <code>{{ site.url }}{{ site.baseurl }}/llms.txt</code>
+      </section>
+    </article>
+    <aside class="docs-toc" aria-label="On this page">
+      <strong>On this page</strong>
+      <ol data-docs-toc></ol>
+      <a href="#content">Back to top</a>
+    </aside>
+  </main>
+  {% else %}
   <main id="content" class="page-shell{% if page.permalink == '/' %} home{% endif %}">
     {{ content }}
   </main>
+  {% endif %}
   <footer class="site-footer">
     <div><strong>Research Wiki</strong><span>Public patterns for grounded research agents.</span></div>
     <div class="footer-links"><a href="{{ '/security/' | relative_url }}">Security</a><a href="{{ '/contributing/' | relative_url }}">Contributing</a><a href="https://github.com/Kitkitkittt/research-wiki">Source</a></div>
   </footer>
+  {% if page.url contains '/docs/' %}<script src="{{ '/assets/docs.js' | relative_url }}" defer></script>{% endif %}
 </body>
 </html>

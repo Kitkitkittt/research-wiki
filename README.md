@@ -11,6 +11,14 @@ Research Wiki is a deployment-neutral public reference for building evidence-fir
 - [Skills catalog](skills/index.md)
 - [Documentation](docs/index.md)
 
+## Agent access
+
+- Documentation index: [`llms.txt`](llms.txt)
+- Complete copy-ready context: [`llms-full.txt`](llms-full.txt)
+- Canonical skills: [`skills/`](skills/)
+
+Give an agent the deployed `llms.txt` URL for selective retrieval. The documentation UI also provides **Copy all for agent** for the complete public context.
+
 ## Principles
 
 1. Authorization runs before retrieval.

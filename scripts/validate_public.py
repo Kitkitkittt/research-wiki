@@ -40,6 +40,32 @@ HEADING = re.compile(r"^#{1,6}\s+(.+?)\s*$", re.MULTILINE)
 SKILL_NAMES = tuple(
     path.parent.name for path in sorted(ROOT.glob("skills/*/SKILL.md"))
 )
+AGENT_SOURCE_PATHS = (
+    *(path.relative_to(ROOT) for path in sorted((ROOT / "docs").glob("*.md"))),
+    *(path.relative_to(ROOT) for path in sorted((ROOT / "guides").glob("*.md"))),
+    Path("skills/index.md"),
+    Path("skills/reference.md"),
+    *(Path("skills") / name / "SKILL.md" for name in SKILL_NAMES),
+    Path("plugins/index.md"),
+    Path("plugins/research-wiki-agent/index.md"),
+    Path("plugins/research-wiki-agent/plugin.json"),
+    Path("plugins/research-wiki-agent/mcp.json"),
+)
+AGENT_INDEX_ENTRIES = (
+    ("Documentation overview", "docs/"),
+    ("Evidence model", "docs/how-evidence-works/"),
+    ("Authority and access", "docs/authority-and-access/"),
+    ("Search and citations", "docs/search-and-citations/"),
+    ("Versioning and conflicts", "docs/versioning-and-conflicts/"),
+    ("Table safety", "docs/table-safety/"),
+    ("Security model", "docs/security-model/"),
+    ("MCP design guidance", "docs/mcp-tool-contract/"),
+    ("Portable agent template", "docs/agent-plugin-contract/"),
+    ("Glossary", "docs/glossary/"),
+    ("Guides", "guides/"),
+    ("Skill reference", "skills/reference/"),
+    ("Full public context", "llms-full.txt"),
+)
 DEPLOYED_ROUTES = (
     "./",
     "guides/",
@@ -54,6 +80,7 @@ DEPLOYED_ROUTES = (
     "contributing/",
     "404.html",
 )
+DEPLOYED_AGENT_FILES = ("llms.txt", "llms-full.txt")
 DEPLOYED_DOWNLOADS = tuple(
     f"downloads/skills/{name}/SKILL.md" for name in SKILL_NAMES
 )
@@ -292,6 +319,128 @@ def validate_plugin_parity(errors: list[str]) -> None:
             errors.append(f"plugin skill drift: {name}")
 
 
+def public_site_url() -> str:
+    values: dict[str, str] = {}
+    for line in (ROOT / "_config.yml").read_text(encoding="utf-8").splitlines():
+        key, separator, value = line.partition(":")
+        if separator and key in {"url", "baseurl"}:
+            values[key] = value.strip().strip("'\"")
+    if not values.get("url"):
+        raise ValueError("_config.yml requires url for agent artifacts")
+    return values["url"].rstrip("/") + "/" + values.get("baseurl", "").strip("/") + "/"
+
+
+def without_front_matter(text: str) -> str:
+    match = FRONT_MATTER.match(text)
+    return text[match.end():].strip() if match else text.strip()
+
+
+def agent_link(source: Path, raw: str, base: str) -> str:
+    parsed = urlsplit(raw)
+    if parsed.scheme or parsed.netloc or raw.startswith(("#", "mailto:")):
+        return raw
+    target = (source.parent / parsed.path).resolve()
+    try:
+        relative = target.relative_to(ROOT.resolve())
+    except ValueError:
+        return raw
+    if relative.parts[-1:] == ("SKILL.md",) and len(relative.parts) >= 3:
+        route = f"downloads/skills/{relative.parts[-2]}/SKILL.md"
+    elif relative.name == "index.md":
+        route = relative.parent.as_posix().rstrip("/") + "/"
+    elif relative.suffix == ".md":
+        route = relative.with_suffix("").as_posix().rstrip("/") + "/"
+    else:
+        route = relative.as_posix()
+    absolute = urljoin(base, route)
+    return absolute + (f"#{parsed.fragment}" if parsed.fragment else "")
+
+
+def agent_source_text(source: Path, base: str) -> str:
+    body = without_front_matter(source.read_text(encoding="utf-8"))
+    if source.suffix == ".json":
+        return f"```json\n{body}\n```"
+    body = LIQUID_LINK.sub(
+        lambda match: urljoin(base, match.group(1).lstrip("/")),
+        body,
+    )
+    return MARKDOWN_LINK.sub(
+        lambda match: match.group(0).replace(
+            match.group(1), agent_link(source, match.group(1), base)
+        ),
+        body,
+    )
+
+
+def agent_artifacts() -> dict[str, str]:
+    base = public_site_url()
+    index_lines = [
+        "# Research Wiki",
+        "",
+        "> Deployment-neutral public documentation for evidence-first research agents.",
+        "",
+        "Use this index to retrieve only the context needed for a task. This repository does not host an MCP server or credentials.",
+        "",
+        "## Documentation",
+        "",
+    ]
+    index_lines.extend(
+        f"- [{label}]({urljoin(base, route)})" for label, route in AGENT_INDEX_ENTRIES
+    )
+    index_lines.extend(
+        [
+            "",
+            "## Canonical skills",
+            "",
+            *(
+                f"- [{name}]({urljoin(base, f'downloads/skills/{name}/SKILL.md')})"
+                for name in SKILL_NAMES
+            ),
+            "",
+        ]
+    )
+    full_lines = [
+        "# Research Wiki — full public agent context",
+        "",
+        f"Source: {urljoin(base, 'llms.txt')}",
+        "Boundary: public reference material only; no credentials, private evidence, live endpoint, or deployment authority.",
+        "",
+    ]
+    for relative in AGENT_SOURCE_PATHS:
+        source = ROOT / relative
+        full_lines.extend(
+            [
+                "---",
+                f"Source file: {relative.as_posix()}",
+                "---",
+                "",
+                agent_source_text(source, base),
+                "",
+            ]
+        )
+    return {
+        "llms.txt": "\n".join(index_lines),
+        "llms-full.txt": "\n".join(full_lines),
+    }
+
+
+def write_agent_artifacts() -> None:
+    for name, content in agent_artifacts().items():
+        (ROOT / name).write_text(content, encoding="utf-8")
+
+
+def validate_agent_artifacts(errors: list[str]) -> None:
+    for name, expected in agent_artifacts().items():
+        path = ROOT / name
+        try:
+            observed = path.read_text(encoding="utf-8")
+        except OSError:
+            errors.append(f"agent artifact missing: {name}")
+            continue
+        if observed != expected:
+            errors.append(f"agent artifact drift: {name}")
+
+
 def export_skill_downloads(destination: Path) -> None:
     root = destination.resolve()
     if root == ROOT.resolve() or root == (ROOT / "skills").resolve():
@@ -344,6 +493,17 @@ def validate_deployed_site(site_url: str, errors: list[str]) -> None:
                     errors.append(f"deployed skill download differs: {url}")
         except (HTTPError, URLError, TimeoutError) as exc:
             errors.append(f"deployed skill download failed: {url}: {exc}")
+    for route in DEPLOYED_AGENT_FILES:
+        url = urljoin(base, route)
+        expected = (ROOT / route).read_bytes()
+        try:
+            request = Request(url, headers={"User-Agent": "research-wiki-validator"})
+            with urlopen(request, timeout=20) as response:
+                observed = response.read()
+                if response.status != 200 or observed != expected:
+                    errors.append(f"deployed agent artifact differs: {url}")
+        except (HTTPError, URLError, TimeoutError) as exc:
+            errors.append(f"deployed agent artifact failed: {url}: {exc}")
     missing_url = urljoin(base, "validator-missing-page")
     try:
         request = Request(missing_url, headers={"User-Agent": "research-wiki-validator"})
@@ -363,7 +523,10 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--site-url")
     parser.add_argument("--export-downloads", type=Path)
+    parser.add_argument("--write-agent-files", action="store_true")
     arguments = parser.parse_args()
+    if arguments.write_agent_files:
+        write_agent_artifacts()
     errors: list[str] = []
     validate_json(errors)
     validate_public_text(errors)
@@ -371,6 +534,7 @@ def main() -> int:
     validate_links(errors)
     validate_plugin_contract(errors)
     validate_plugin_parity(errors)
+    validate_agent_artifacts(errors)
     if not errors and arguments.export_downloads:
         export_skill_downloads(arguments.export_downloads)
     if arguments.site_url:

@@ -101,13 +101,72 @@ table { width: 100%; border-collapse: collapse; font-size: .92rem; margin: 2rem 
 th, td { text-align: left; padding: .85rem; border-bottom: 1px solid var(--line); vertical-align: top; }
 th { font: 500 .72rem ui-monospace, SFMono-Regular, Consolas, monospace; text-transform: uppercase; letter-spacing: .05em; }
 hr { border: 0; border-top: 1px solid var(--line); margin: 4rem 0; }
+.docs-body { background: #fff; color: #171914; }
+.docs-body .site-header { width: min(calc(100% - 2rem), 1460px); min-height: 64px; border-color: #e5e7df; }
+.docs-body .brand-mark { width: 34px; height: 34px; border-radius: 8px; }
+.docs-shell { width: min(100%, 1500px); margin: 0 auto; display: grid; grid-template-columns: 248px minmax(0, 820px) 210px; justify-content: center; min-height: calc(100vh - 65px); }
+.docs-sidebar { padding: 2rem 1.25rem 4rem; border-right: 1px solid #e5e7df; background: #fafbf8; }
+.docs-product { display: flex; flex-direction: column; padding: 0 .75rem 1.5rem; border-bottom: 1px solid #e5e7df; }
+.docs-product span, .docs-agent-access span, .docs-toolbar > span, .docs-handoff > span { color: #73796b; font: 600 .66rem ui-monospace, SFMono-Regular, Consolas, monospace; letter-spacing: .1em; }
+.docs-product strong { margin-top: .3rem; font-size: 1rem; }
+.docs-product small { color: #73796b; font: .72rem ui-monospace, SFMono-Regular, Consolas, monospace; }
+.docs-nav { display: flex; flex-direction: column; gap: .15rem; margin-top: 1.25rem; font-weight: 600; }
+.docs-nav > span { margin: 1.15rem .75rem .35rem; color: #8a8f83; font: 600 .65rem ui-monospace, SFMono-Regular, Consolas, monospace; letter-spacing: .08em; text-transform: uppercase; }
+.docs-nav a { padding: .5rem .75rem; border-radius: 6px; color: #4c5148; font-size: .82rem; line-height: 1.3; }
+.docs-nav a:hover { background: #eff1ea; text-decoration: none; }
+.docs-nav a.active { background: #e9fbc2; color: #20251a; box-shadow: inset 3px 0 0 #8caf31; }
+.docs-agent-access { display: flex; flex-direction: column; gap: .4rem; margin: 2rem .75rem 0; padding-top: 1.25rem; border-top: 1px solid #e5e7df; font-size: .76rem; }
+.docs-agent-access a { text-decoration: underline; text-underline-offset: .2rem; }
+.docs-content { min-width: 0; padding: 1.5rem clamp(2rem, 5vw, 4.5rem) 7rem; }
+.docs-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 1rem; min-height: 48px; padding-bottom: 1rem; border-bottom: 1px solid #e5e7df; }
+.docs-toolbar div { display: flex; align-items: center; gap: .55rem; }
+.docs-toolbar a, .docs-toolbar button { min-height: 34px; padding: .4rem .65rem; border: 1px solid #d4d8cd; border-radius: 6px; background: #fff; color: #30352c; font: 600 .72rem ui-monospace, SFMono-Regular, Consolas, monospace; text-decoration: none; cursor: pointer; }
+.docs-toolbar a:hover, .docs-toolbar button:hover { border-color: #879078; background: #f5f7f1; }
+.copy-status { min-height: 1.5rem; margin: .5rem 0 0; color: #527014; font: .72rem ui-monospace, SFMono-Regular, Consolas, monospace; }
+.copy-status a { text-decoration: underline; text-underline-offset: .2rem; }
+.docs-content > h1 { margin: 1.6rem 0 .8rem; font-size: clamp(2.5rem, 5vw, 4rem); letter-spacing: -.045em; }
+.docs-content > h1::before { content: none; }
+.docs-content > h1 + p { color: #646a5d; font-size: 1.08rem; }
+.docs-content > h2 { margin-top: 3.5rem; padding-top: 1.2rem; border-top: 1px solid #e5e7df; font-size: 1.75rem; letter-spacing: -.035em; }
+.docs-content > h3 { margin-top: 2.4rem; font-size: 1.2rem; letter-spacing: -.025em; }
+.docs-content p, .docs-content li { max-width: 760px; }
+.docs-content pre { border: 1px solid #2f342b; border-left: 4px solid var(--lime); border-radius: 7px; box-shadow: 0 8px 25px rgba(18, 22, 15, .08); }
+.docs-content table { border: 1px solid #e0e3da; }
+.docs-content th { background: #f4f6f0; }
+.docs-content th, .docs-content td { border-right: 1px solid #e0e3da; }
+.docs-content blockquote { margin: 2rem 0; padding: 1rem 1.25rem; border-left: 4px solid #8caf31; background: #f3f8e8; }
+.docs-handoff { margin-top: 5rem; padding: 1.5rem; border: 1px solid #dfe3d7; border-radius: 8px; background: #f7f9f3; }
+.docs-handoff p { margin: .5rem 0 .75rem; color: #565c50; }
+.docs-handoff code { display: block; overflow-wrap: anywhere; background: #e9ede3; }
+.docs-toc { padding: 2.2rem 1rem; font-size: .76rem; }
+.docs-toc strong { font: 700 .68rem ui-monospace, SFMono-Regular, Consolas, monospace; letter-spacing: .05em; text-transform: uppercase; }
+.docs-toc ol { list-style: none; padding: 0; margin: .8rem 0 1.2rem; }
+.docs-toc li { margin: .45rem 0; line-height: 1.35; }
+.docs-toc li.subsection { padding-left: .75rem; }
+.docs-toc a { color: #686e61; text-decoration: none; }
+.docs-toc a:hover { color: #171914; text-decoration: underline; }
+.docs-body .site-footer { width: min(calc(100% - 2rem), 1460px); }
+@media (min-width: 1101px) {
+  .docs-sidebar, .docs-toc { position: sticky; top: 0; align-self: start; max-height: 100vh; overflow: auto; }
+}
+@media (max-width: 1100px) {
+  .docs-shell { grid-template-columns: 220px minmax(0, 1fr); }
+  .docs-toc { display: none; }
+}
 @media (max-width: 760px) {
   .site-header { align-items: flex-start; padding: 1rem 0; }
   nav { flex-wrap: wrap; justify-content: flex-end; gap: .5rem 1rem; }
-  nav a:nth-last-child(1) { display: none; }
+  .site-header nav a:nth-last-child(1) { display: none; }
   .hero::after { opacity: .4; }
   .trust-strip, .card-grid, .split { grid-template-columns: 1fr; }
   .split { gap: 1rem; }
   .callout, .site-footer { align-items: flex-start; flex-direction: column; }
+  .docs-shell { display: block; }
+  .docs-sidebar { position: static; padding: 1rem; border-right: 0; border-bottom: 1px solid #e5e7df; }
+  .docs-product { padding-bottom: .8rem; }
+  .docs-nav { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); margin-top: .6rem; }
+  .docs-nav > span, .docs-agent-access { grid-column: 1 / -1; }
+  .docs-content { padding: 1rem 1rem 5rem; }
+  .docs-toolbar { align-items: flex-start; flex-direction: column; }
 }
 @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } * { transition: none !important; } }

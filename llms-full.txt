@@ -1,0 +1,967 @@
+# Research Wiki — full public agent context
+
+Source: https://kitkitkittt.github.io/research-wiki/llms.txt
+Boundary: public reference material only; no credentials, private evidence, live endpoint, or deployment authority.
+
+---
+Source file: docs/agent-plugin-contract.md
+---
+
+# Agent plugin contract
+
+This repository's agent template is a portable set of source files that can point an AI client at an operator-supplied MCP server and provide reusable skills. It is not a universal or directly installable plugin format.
+
+## Package boundary
+
+The package may contain:
+
+- plugin metadata and semantic version;
+- a placeholder MCP endpoint definition;
+- skills and public schemas;
+- integrity metadata generated for the package.
+
+It contains no credentials, private hosts, source data, tenant settings, deployment state, or mutable cache.
+
+## Compatibility
+
+In a real deployment, the adapted client package, MCP tool catalog, and skills form one compatibility set. A skill must not advertise a tool absent from the active catalog. A tool's required scope and input contract must match every generated reference. This public template deliberately names workflows rather than claiming a deployment-specific callable catalog.
+
+## Installation responsibility
+
+The deployment operator supplies endpoint and authentication details. The AI client supplies credentials. The plugin supplies process guidance. The MCP server remains the authority for access, readiness, tool behavior, and evidence.
+
+---
+Source file: docs/authority-and-access.md
+---
+
+# Authority and access
+
+Identity, authority, quality, and access answer different questions.
+
+| Axis | Question |
+| --- | --- |
+| Identity | What logical document and version is this? |
+| Authority | What review disposition does this evidence carry? |
+| Quality | Which deterministic checks passed? |
+| Access | May this caller retrieve it? |
+
+No generic `approved` flag may replace all four.
+
+## Permission-first retrieval
+
+Authorization and hard scope filters run before lexical, dense, reranking, or model stages. Post-retrieval redaction is not a primary access control.
+
+A safe order is:
+
+```text
+authentication
+  -> authorization
+  -> access lane
+  -> entity
+  -> period and family
+  -> quality and authority
+  -> current version
+  -> candidate ranking
+  -> citation re-fetch
+```
+
+If no authorized evidence remains, return an abstention. Do not broaden the scope or search restricted material to improve recall.
+
+## Neutral failures
+
+Before authorization succeeds, errors should reveal no restricted tool, document, entity, or capability detail. After authorization, typed limitations may explain missing, partial, stale, conflicting, or insufficient evidence without exposing internal diagnostics.
+
+---
+Source file: docs/glossary.md
+---
+
+# Glossary
+
+**Answer class**  
+The level requested or served: exact, narrative, or discovery. An automatic request may explicitly downgrade; an exact request may not.
+
+**Authority**  
+The review disposition of evidence. Authority does not grant access.
+
+**Citation closure**  
+The condition where every material claim maps to current authorized evidence that supports it.
+
+**Document version**  
+Immutable content identity independent of a path or filename.
+
+**Evidence span**  
+An addressable source passage, page region, table cell, or structured observation.
+
+**Limitation**  
+A typed explanation of what the evidence or operation could not support.
+
+**Projection**  
+A reproducible view such as an index, summary, wiki page, table, chart, or answer. It is not source authority.
+
+**Retrieval unit**  
+A bounded source-backed item used to find evidence.
+
+**Source observation**  
+A record of where and when source bytes were observed.
+
+**Structured fact**  
+A verified observation with complete entity, metric, period, unit, scale, currency, scope, and citation dimensions.
+
+---
+Source file: docs/how-evidence-works.md
+---
+
+# How evidence works
+
+Research Wiki keeps source authority separate from every view generated for search, navigation, or synthesis.
+
+```text
+immutable sources
+  -> versioned document catalog
+  -> permission-filtered retrieval units
+  -> exact citation fetch
+  -> verified claims
+  -> disposable wiki, table, and answer projections
+```
+
+## Authority layers
+
+1. **Source observation** records where and when bytes were observed.
+2. **Document version** identifies immutable content independent of a path or filename.
+3. **Evidence span** addresses a passage, page region, table cell, or structured observation.
+4. **Retrieval unit** helps find evidence but is never a new source of truth.
+5. **Claim** states an interpretation and links to its evidence.
+6. **Presentation** arranges verified claims for a reader without changing their authority.
+
+## Exact and narrative evidence
+
+Exact numeric claims require a verified structured source with complete dimensions. Source text can support a cited narrative even when it cannot support normalization or reconciliation. Similarity, model confidence, and visual presentation never increase evidence authority.
+
+## Generated projections
+
+Indexes, summaries, wiki pages, charts, and unified tables are reproducible views. Deleting one must not delete or rewrite the source evidence it references.
+
+---
+Source file: docs/index.md
+---
+
+# Documentation
+
+Technical contracts and design guidance for evidence-first research systems. Analysts can read these pages directly; agents should start from [`llms.txt`](https://kitkitkittt.github.io/research-wiki/llms.txt) or use **Copy all for agent** above for the full public context.
+
+> **Agent handoff:** give an agent the documentation index URL shown in the handoff panel. It can fetch only the relevant pages, canonical skills, or full bundle from that index.
+
+## Foundations
+
+- [How evidence works](https://kitkitkittt.github.io/research-wiki/docs/how-evidence-works/)
+- [Authority and access](https://kitkitkittt.github.io/research-wiki/docs/authority-and-access/)
+- [Search, citations, and abstention](https://kitkitkittt.github.io/research-wiki/docs/search-and-citations/)
+
+## Source integrity
+
+- [Versioning and conflicts](https://kitkitkittt.github.io/research-wiki/docs/versioning-and-conflicts/)
+- [Multi-page table safety](https://kitkitkittt.github.io/research-wiki/docs/table-safety/)
+- [Security model](https://kitkitkittt.github.io/research-wiki/docs/security-model/)
+
+## Integration
+
+- [MCP tool design guidance](https://kitkitkittt.github.io/research-wiki/docs/mcp-tool-contract/)
+- [Portable agent-template contract](https://kitkitkittt.github.io/research-wiki/docs/agent-plugin-contract/)
+- [Glossary](https://kitkitkittt.github.io/research-wiki/docs/glossary/)
+
+---
+Source file: docs/mcp-tool-contract.md
+---
+
+# MCP tool contract
+
+This page is recommended design guidance for operators building an MCP service. This repository does not publish a live server or authoritative tool catalog. A deployment's own versioned catalog remains the source for server registration, client discovery, generated documentation, skills, and conformance tests.
+
+## Tool fields
+
+| Field | Purpose |
+| --- | --- |
+| `name` | Stable namespaced operation name |
+| `description` | When the agent should call it |
+| `inputSchema` | Closed, validated arguments |
+| `outputSchema` | Typed success and limitation envelope |
+| `requiredScope` | Authorization needed before discovery or call |
+| `readiness` | Whether the backing capability can serve now |
+| `compact` | Whether output is bounded for agent context |
+
+## Error behavior
+
+Distinguish transport, authentication, authorization, admission, evidence, cancellation, and internal failures. A zero count or empty authorized result is valid data, not automatically an error. Partial success must be explicit.
+
+## Long-running research
+
+Use durable operations for work that exceeds one tool call. Submission returns an operation ID; status and event tools provide progress; result tools return a typed terminal artifact. Cancellation and retries remain idempotent and authorization-bound.
+
+---
+Source file: docs/search-and-citations.md
+---
+
+# Search, citations, and abstention
+
+Search finds candidates. Citation fetch establishes the evidence a claim actually uses.
+
+## Retrieval units
+
+Good retrieval units preserve semantic boundaries:
+
+- one complete section;
+- one numbered note;
+- one source table or governed table fragment;
+- one page-backed passage;
+- one structured observation with complete dimensions.
+
+Do not split a numbered note, primary statement, or multi-page table at arbitrary token boundaries. A small child unit may retrieve quickly, but the agent should receive its cited parent context before interpretation.
+
+## Citation closure
+
+A material claim is closed when:
+
+1. every cited ID resolves in the current authorized snapshot;
+2. the fetched evidence supports that claim, not merely the topic;
+3. numeric claims preserve source value, unit, scale, currency, period, and scope;
+4. superseded and conflicting versions remain visible;
+5. the answer can be regenerated from the recorded evidence set.
+
+## Abstention
+
+Abstain when evidence is absent, unauthorized, ambiguous, incomplete, stale, conflicting beyond resolution, or too weak for the requested answer class. Return the supported subset and explicit limitations only when the transport contract defines partial success.
+
+---
+Source file: docs/security-model.md
+---
+
+# Security model
+
+## Credentials
+
+Keep credentials in the MCP client, an OAuth flow, or the deployment environment. Plugin packages, skills, prompts, logs, URLs, and public repositories contain no credential values.
+
+## Tool discovery
+
+Authenticate before starting the MCP session. Filter `tools/list` by the caller's effective scopes and capability readiness. Unauthorized callers receive neutral errors that reveal no hidden tool metadata.
+
+## Evidence privacy
+
+Apply access controls before ranking. Public telemetry should contain IDs, bounded counts, timings, states, and hashes—not query text, source text, document titles, paths, prompts, model reasoning, or provider payloads.
+
+## Write-capable tools
+
+Research tools should be read-only by default. A future write tool requires a distinct scope, explicit user confirmation, an idempotency key, immutable audit evidence, and a safe retry contract.
+
+## Generated content
+
+Treat model output as untrusted input. Validate tool arguments, citation IDs, table joins, formulas, URLs, renderer specifications, and exported files at the server boundary.
+
+---
+Source file: docs/table-safety.md
+---
+
+# Multi-page table safety
+
+Page-based extraction can split one logical table, repeat headers, omit continuation labels, or preserve cells in geometry that is not safely rectangular.
+
+## Governed reconstruction
+
+A model may propose which fragments belong together. Deterministic validation decides whether the proposal can be displayed as one table.
+
+A safe join requires compatible:
+
+- source document and logical table identity;
+- adjacent or explicitly linked page sequence;
+- column count and span geometry;
+- repeated or continued headers;
+- unit, currency, scale, period, and report scope;
+- row-label continuation and total behavior;
+- source-cell citations.
+
+Preserve raw cell strings and physical fragment identities. Never pad, truncate, reorder, or invent cells to manufacture a rectangular table.
+
+## Ambiguity
+
+When geometry, period, unit, or continuation evidence is uncertain, render fragments separately with a review state. AI may explain the ambiguity, but it cannot convert a proposed join into verified structured fact.
+
+## Presentation
+
+A reconstructed table is a disposable projection. Every visible value maps to one or more source cells. Charts are supplementary and must retain the same cited table or accessible text representation.
+
+---
+Source file: docs/versioning-and-conflicts.md
+---
+
+# Versioning and conflicts
+
+A document identity excludes its path and filename. The same bytes observed at multiple locations form one immutable version with multiple source observations.
+
+## Time axes
+
+- **Reporting period** — the economic period described by the content.
+- **Source observation time** — when the system saw the source.
+- **Knowledge time** — when the system learned a claim.
+- **Valid time** — when a claim is considered true in its domain.
+- **Event time** — when an underlying event occurred.
+
+Keep these axes separate. A publication date does not replace a reporting period.
+
+## Revisions
+
+Never overwrite old evidence. A newer version may supersede an older one while both remain addressable. Historical research binds to the frozen version set it used; live research rechecks the current version before emission.
+
+## Conflicts
+
+Preserve mirrors, translations, restatements, and disagreements. Source ranking may guide review but must not erase a conflict. A claim should state which version it uses and why other versions were excluded or retained as limitations.
+
+---
+Source file: guides/agent-workflows.md
+---
+
+# Agent workflows
+
+MCP is the analyst-facing tool contract. Multi-agent work stays bounded behind one server-side coordinator: the client submits a goal, while the server controls specialist roles, allowed tools, budgets, deadlines, evidence contracts, and result verification.
+
+## Coordinator responsibilities
+
+1. Classify the request without granting access.
+2. Freeze entity, period, answer class, access lane, and evidence authority.
+3. Build a bounded dependency graph.
+4. Assign each task one specialist objective and allowlisted tool set.
+5. Run independent retrieval tasks concurrently within the published ceiling.
+6. Verify citations before synthesis.
+7. Return one immutable result or typed abstention.
+
+## Suggested specialist lanes
+
+- verified structured facts;
+- financial statements;
+- financial notes;
+- annual and governance documents;
+- analyst research;
+- structured market observations;
+- general document fallback;
+- claim and citation verification.
+
+A lane is an authority constraint, not an agent personality. A model may interpret verified evidence but cannot upgrade its authority.
+
+## Exact answers
+
+Use a zero-model path when a requested fact is already represented by a verified structured observation. Preserve the source dimensions, unit, period, currency, scope, and citation.
+
+## Narrative answers
+
+Provide the model only authorized, bounded, citation-addressable evidence. Require claim-to-citation closure and preserve conflicting versions rather than silently choosing one.
+
+## Completion criterion
+
+The workflow is complete when every material claim maps to current authorized evidence, every displayed number preserves its source dimensions, and every unsupported part is recorded as a limitation.
+
+Review the [evidence-first research skill](https://kitkitkittt.github.io/research-wiki/skills/reference/#evidence-first-research), then download its canonical payload from the reference page when configuring a client.
+
+---
+Source file: guides/index.md
+---
+
+# Guides
+
+Use these guides in order when setting up a new Research Wiki agent surface.
+
+1. [Quick start](https://kitkitkittt.github.io/research-wiki/guides/quickstart/) — understand the evidence-first workflow.
+2. [MCP setup](https://kitkitkittt.github.io/research-wiki/guides/mcp-setup/) — connect and authenticate a remote client.
+3. [Portable template adaptation](https://kitkitkittt.github.io/research-wiki/guides/plugin-installation/) — adapt MCP and skill source files through a named client.
+4. [Agent workflows](https://kitkitkittt.github.io/research-wiki/guides/agent-workflows/) — coordinate retrieval, verification, and synthesis.
+5. [Troubleshooting](https://kitkitkittt.github.io/research-wiki/guides/troubleshooting/) — distinguish transport, authentication, authorization, and evidence failures.
+
+---
+Source file: guides/mcp-setup.md
+---
+
+# MCP setup
+
+This static site does not operate an MCP service. To use these patterns with a client, obtain a remote MCP endpoint from your deployment operator. Keep the endpoint and credential in the client configuration; template and skill files contain neither.
+
+## Required values
+
+- MCP endpoint: `https://<your-host>/mcp/`
+- Authentication: the bearer or OAuth method published by your deployment
+- Client support: remote MCP over Streamable HTTP
+
+Keep the trailing slash when the operator publishes one. Some clients drop authorization headers while following redirects.
+
+## Generic client configuration
+
+```json
+{
+  "mcpServers": {
+    "research-wiki": {
+      "type": "streamable-http",
+      "url": "https://<your-host>/mcp/",
+      "headers": {
+        "Authorization": "Bearer <your-token>"
+      }
+    }
+  }
+}
+```
+
+If your client supports OAuth, use the deployment's authorization flow instead of a static bearer header.
+
+## Session sequence
+
+A conforming client performs:
+
+1. `initialize`
+2. `notifications/initialized`
+3. `tools/list`
+4. `tools/call`
+
+Treat `tools/list` as caller-specific. A server may hide tools whose required scopes are absent.
+
+## First research call
+
+1. Ask the client to describe available research capabilities.
+2. Resolve a stable entity identity before requesting company-specific evidence.
+3. Start with a discovery or cited-narrative task.
+4. Open one returned citation and compare it with the synthesized claim.
+
+## Safe error interpretation
+
+| Symptom | Likely class |
+| --- | --- |
+| DNS, TLS, timeout, or unsupported media type | Transport |
+| `401` or OAuth challenge | Authentication |
+| Neutral missing-tool response | Authorization or readiness |
+| Typed abstention with limitations | Evidence cannot support the requested claim |
+| Partial result | Some bounded work completed; inspect limitations before reuse |
+
+Continue with [agent workflows](https://kitkitkittt.github.io/research-wiki/guides/agent-workflows/) for tool-selection guidance.
+
+---
+Source file: guides/plugin-installation.md
+---
+
+# Portable template adaptation
+
+The public template bundles agent guidance and a placeholder MCP definition. It does not contain credentials, private hosts, source documents, deployment state, or a vendor manifest. It is not directly installable: copy its MCP and skill source files through the documented custom-integration mechanisms of a named client.
+
+## Package contents
+
+```text
+research-wiki-agent/
+├── plugin.json
+├── mcp.json
+└── skills/
+    ├── evidence-first-research/SKILL.md
+    ├── company-research/SKILL.md
+    ├── financial-analysis/SKILL.md
+    ├── period-comparison/SKILL.md
+    ├── citation-audit/SKILL.md
+    ├── table-reconstruction/SKILL.md
+    ├── source-intake/SKILL.md
+    └── working-project/SKILL.md
+```
+
+## Configure
+
+1. Confirm that your named AI client supports custom remote MCP configuration and custom skill files. Stop if either mechanism is unavailable.
+2. Copy [`plugins/research-wiki-agent`](https://kitkitkittt.github.io/research-wiki/plugins/research-wiki-agent) to a temporary workspace, not directly into a vendor plugin directory.
+3. Replace `https://<your-host>/mcp/` in `mcp.json` with the endpoint supplied by your operator.
+4. Import `mcp.json` through the client's custom MCP mechanism and each `skills/*/SKILL.md` through its custom skill mechanism.
+5. Configure authentication in the AI client or deployment integration, not in the template files.
+6. Start a new conversation and ask the client to list available Research Wiki tools and describe the evidence-first workflow.
+
+## Verify
+
+The installation is complete when:
+
+- the client establishes one authenticated MCP session;
+- tool discovery returns only authorized tools;
+- the evidence-first research skill is available;
+- a discovery request returns a source reference;
+- opening the reference reproduces the cited evidence;
+- no credential appears in the plugin directory.
+
+## Updates
+
+Treat the plugin version and its skills as one compatibility set. Re-run the repository validator after editing a skill so the bundled copies cannot drift.
+
+---
+Source file: guides/quickstart.md
+---
+
+# Quick start
+
+Research Wiki separates the research experience into three layers:
+
+1. **Evidence** — immutable documents, exact passages, source cells, and structured observations.
+2. **Research tools** — permission-first search, fetch, verify, compare, and long-running operations.
+3. **Agent guidance** — skills that tell an AI client when to use each tool and when to abstain.
+
+## The safe sequence
+
+1. Resolve the entity and requested time period.
+2. Select the requested answer class: exact fact, cited narrative, or discovery.
+3. Discover tools only after authentication succeeds.
+4. Apply access, scope, current-version, and quality filters before ranking evidence.
+5. Search for candidates.
+6. Fetch the exact cited passage, page, table cell, or structured observation.
+7. Verify every material claim and displayed number.
+8. Return limitations for missing, partial, ambiguous, superseded, or conflicting evidence.
+
+## Pick the right interface
+
+| Need | Interface |
+| --- | --- |
+| AI client or agent | MCP tools and bundled skills |
+| Human documentation | This public site |
+| Administration and operations | The deployment's authorized management surface |
+| Internal specialist work | Server-side governed tool handlers, not recursive MCP sessions |
+
+## Next step
+
+If you have an operator-supplied service, connect a client with the [MCP setup guide](https://kitkitkittt.github.io/research-wiki/guides/mcp-setup/), then adapt the [portable source template](https://kitkitkittt.github.io/research-wiki/guides/plugin-installation/). Otherwise, browse the [human-readable skill reference](https://kitkitkittt.github.io/research-wiki/skills/reference/) and use the patterns without claiming a live integration.
+
+---
+Source file: guides/troubleshooting.md
+---
+
+# Troubleshooting
+
+## The client cannot connect
+
+- Confirm the host and path exactly match the operator-provided endpoint.
+- Preserve the trailing slash when present.
+- Confirm the client supports remote MCP over Streamable HTTP.
+- Test DNS and TLS separately from MCP authentication.
+
+## Authentication succeeds but tools are missing
+
+Tool discovery is caller-specific. Confirm the credential carries the required scope and that the tool's backing capability is ready. A neutral missing-tool response should not reveal restricted tool names.
+
+## Search returns no evidence
+
+No evidence can mean the query is too broad, the requested period or family is absent, the source is outside the authorized lane, or the current version is withheld. Narrow the scope; do not remove permission or quality filters.
+
+## An exact request abstains
+
+Exact claims need verified structured evidence with matching entity, period, unit, scope, and current release. Use a cited narrative only when the request explicitly permits it. Never treat OCR text, embedding similarity, or model confidence as exact authority.
+
+## A table looks incomplete
+
+Open the source fragments. Page boundaries may split one logical table. Join fragments only when header, unit, period, geometry, and continuation evidence agree. Keep ambiguous fragments separate and mark them for review.
+
+## A citation changed
+
+Re-fetch the current citation. Source revisions, supersession, access changes, and release changes must fence cached or in-flight output. Historical results should remain bound to their frozen evidence snapshot.
+
+---
+Source file: skills/index.md
+---
+
+# Skills
+
+Skills are portable process contracts for AI clients. Read the [human reference](https://kitkitkittt.github.io/research-wiki/skills/reference/), download canonical `SKILL.md` payloads individually, or copy them from the [portable source template](https://kitkitkittt.github.io/research-wiki/plugins). This site does not configure a client or host an MCP service.
+
+## Research
+
+| Skill | Trigger | Completion criterion |
+| --- | --- | --- |
+| [Evidence-first research](https://kitkitkittt.github.io/research-wiki/skills/reference/#evidence-first-research) | A research question needs cited evidence | Every material claim has current authorized evidence or an explicit limitation |
+| [Company research](https://kitkitkittt.github.io/research-wiki/skills/reference/#company-research) | One entity needs cross-source research | Entity and coverage are explicit; conclusions remain cited |
+| [Financial analysis](https://kitkitkittt.github.io/research-wiki/skills/reference/#financial-analysis) | Statements, notes, metrics, ratios, or breakdowns | Every value retains complete dimensions and source evidence |
+| [Period comparison](https://kitkitkittt.github.io/research-wiki/skills/reference/#period-comparison) | Values or claims need cross-period comparison | Every pair is dimension-compatible or explicitly non-comparable |
+
+## Evidence integrity
+
+| Skill | Trigger | Completion criterion |
+| --- | --- | --- |
+| [Citation audit](https://kitkitkittt.github.io/research-wiki/skills/reference/#citation-audit) | Existing claims need verification | Every citation resolves and supports its claim, or the claim is marked unsupported |
+| [Table reconstruction](https://kitkitkittt.github.io/research-wiki/skills/reference/#table-reconstruction) | A table spans pages or fragments | Every join is deterministic and cited; ambiguous fragments remain separate |
+
+## Source and analyst work
+
+| Skill | Trigger | Completion criterion |
+| --- | --- | --- |
+| [Source intake](https://kitkitkittt.github.io/research-wiki/skills/reference/#source-intake) | A document enters governed evidence | Every unit is terminal and publication or withholding is explicit |
+| [Working project](https://kitkitkittt.github.io/research-wiki/skills/reference/#working-project) | Cited evidence enters editable analyst work | Every project claim is cited or unresolved; notes never become authority |
+
+## Installation
+
+Copy a skill directory into the skill location supported by your AI client. Keep the directory name and front-matter `name` stable. Do not add endpoint or credential values to a skill.
+
+---
+Source file: skills/reference.md
+---
+
+# Skill reference
+
+These pages explain the canonical machine-readable skills without changing their payloads. Download the linked `SKILL.md` file when configuring a client.
+
+## Evidence-first research {#evidence-first-research}
+
+Use for source-backed questions, exact values, discovery, comparisons, and explicit limitations.
+
+1. Classify the requested answer.
+2. Resolve entity, period, source, and access scope.
+3. Retrieve only authorized candidates.
+4. Open exact passages, cells, pages, or observations.
+5. Verify every claim and state unsupported parts.
+
+Completion requires current evidence for every material claim and number. Exact requests abstain rather than silently downgrade.
+
+[Download canonical skill](https://kitkitkittt.github.io/research-wiki/downloads/skills/evidence-first-research/SKILL.md)
+
+## Company research {#company-research}
+
+Use for one entity across documents, structured observations, events, and analyst conclusions.
+
+Resolve one stable identity, freeze the research scope, inspect coverage gaps, retrieve and open evidence, preserve source disagreements, then separate observations from interpretation.
+
+Completion requires an unambiguous entity and current evidence or an explicit limitation for every conclusion.
+
+[Download canonical skill](https://kitkitkittt.github.io/research-wiki/downloads/skills/company-research/SKILL.md)
+
+## Financial analysis {#financial-analysis}
+
+Use for statements, notes, metrics, ratios, breakdowns, and valuation inputs.
+
+Define complete financial dimensions, select the correct authority, fetch every source cell, reject incompatible units or periods, and calculate only with approved formulas over verified observations.
+
+Completion requires reproducible values, named formula inputs, and citations for every narrative claim.
+
+[Download canonical skill](https://kitkitkittt.github.io/research-wiki/downloads/skills/financial-analysis/SKILL.md)
+
+## Period comparison {#period-comparison}
+
+Use for quarter, year, entity, version, or restatement comparisons.
+
+Resolve both periods, match dimensions, preserve restatements, fetch both sources, compute only compatible deltas, and leave non-comparable pairs explicit.
+
+Completion requires every comparison to reproduce from cited source values.
+
+[Download canonical skill](https://kitkitkittt.github.io/research-wiki/downloads/skills/period-comparison/SKILL.md)
+
+## Citation audit {#citation-audit}
+
+Use to review claims, values, tables, and reports for direct source support.
+
+Inventory claims, re-fetch citations, match exact source locations, check versions and numeric fidelity, then classify each claim as supported, partial, contradicted, unresolved, or unauthorized.
+
+Completion requires one audit disposition for every material claim.
+
+[Download canonical skill](https://kitkitkittt.github.io/research-wiki/downloads/skills/citation-audit/SKILL.md)
+
+## Table reconstruction {#table-reconstruction}
+
+Use when tables span pages or arrive as fragments.
+
+Preserve physical fragments, propose continuations from structural evidence, validate geometry and dimensions, keep ambiguity separate, and project only values that retain source-cell citations.
+
+Completion requires deterministic compatibility for every join. The fallback is separate cited fragments, never fabricated rectangular data.
+
+[Download canonical skill](https://kitkitkittt.github.io/research-wiki/downloads/skills/table-reconstruction/SKILL.md)
+
+## Source intake {#source-intake}
+
+Use when authorized documents enter governed evidence.
+
+Declare rights, resolve identity, submit immutable bytes once, monitor without exposing content, validate complete citation-addressable output, review ambiguity, and publish only after every gate passes.
+
+Completion requires a terminal disposition for every processing unit and explicit publication or withholding.
+
+[Download canonical skill](https://kitkitkittt.github.io/research-wiki/downloads/skills/source-intake/SKILL.md)
+
+## Working project {#working-project}
+
+Use for editable analyst notes and cited drafts that must remain separate from source authority.
+
+Define scope, collect references, label claim types, revalidate citations, preserve history, and export with limitations and unresolved conflicts.
+
+Completion requires current evidence or an unresolved label for every material claim. Editable notes never become source authority.
+
+[Download canonical skill](https://kitkitkittt.github.io/research-wiki/downloads/skills/working-project/SKILL.md)
+
+---
+Source file: skills/citation-audit/SKILL.md
+---
+
+# Citation audit
+
+## Workflow
+
+1. **Inventory** — list every material claim, displayed number, and attached citation.
+2. **Re-fetch** — resolve each citation through the current authenticated evidence interface. Cached text is not verification.
+3. **Match** — compare the claim with the exact passage, page, row, column, cell, or structured dimensions.
+4. **Check version** — detect superseded, historical, missing, unauthorized, or release-changed evidence.
+5. **Check numbers** — preserve source sign, digits, unit, scale, currency, period, scope, and actuality.
+6. **Classify** — mark each claim `supported`, `partially_supported`, `contradicted`, `unresolved`, or `unauthorized`.
+7. **Report** — retain supported text; identify the precise gap for every other claim without inventing a replacement.
+
+## Completion criterion
+
+Complete only when every cited claim has one audit disposition and every `supported` claim points to evidence that directly supports it. Uncited material claims remain unresolved.
+
+## Related public references
+
+- Search, citations, and abstention
+- Versioning and conflicts
+
+---
+Source file: skills/company-research/SKILL.md
+---
+
+# Company research
+
+## Workflow
+
+1. **Resolve** — map the requested name or symbol to one stable entity identity. Stop on ambiguity.
+2. **Scope** — freeze periods, document families, source authority, answer class, and access lane.
+3. **Browse** — inspect the entity's document and data inventory before searching so absent coverage stays visible.
+4. **Retrieve** — run permission-first evidence search within the frozen scope.
+5. **Open** — fetch complete cited passages, pages, tables, and structured observations.
+6. **Compare** — preserve revisions, translations, source disagreements, and period differences.
+7. **Verify** — audit every material claim and number against current evidence.
+8. **Conclude** — separate observations, interpretations, assumptions, risks, catalysts, and limitations.
+
+## Completion criterion
+
+Complete only when the entity is unambiguous, the searched inventory and gaps are stated, and every conclusion has current authorized evidence or an explicit limitation.
+
+## Related public references
+
+- Evidence-first research
+- Versioning and conflicts
+
+---
+Source file: skills/evidence-first-research/SKILL.md
+---
+
+# Evidence-first research
+
+## Workflow
+
+1. **Classify** — identify the requested answer class: exact fact, cited narrative, discovery, or automatic.
+2. **Scope** — resolve stable entities, periods, document families, report scope, units, and access lane. Stop when ambiguity remains.
+3. **Discover** — list only tools available to the authenticated caller and select the narrowest capable operation.
+4. **Retrieve** — search within the authorized scope. Treat similarity as candidate discovery, never authority.
+5. **Open** — fetch the exact cited passage, table cell, page, or structured observation for every candidate claim.
+6. **Verify** — confirm current version, source dimensions, authority, quality, and claim-to-citation support.
+7. **Synthesize** — write only from verified evidence. Preserve disagreements, restatements, and source wording.
+8. **Limit** — state every unsupported, partial, ambiguous, stale, or unauthorized part.
+
+## Exact facts
+
+Use only verified structured observations with matching entity, metric, period, unit, scale, currency, scope, and citation. Source text, OCR, embeddings, and model confidence can support discovery or narrative context but cannot authorize an exact fact.
+
+## Completion criterion
+
+Complete only when every material claim and displayed number maps to current authorized evidence, and every unsupported part has a typed limitation. If the requested answer class cannot be met, abstain rather than silently downgrade.
+
+## Related public references
+
+- How evidence works
+- Search, citations, and abstention
+- Authority and access
+
+---
+Source file: skills/financial-analysis/SKILL.md
+---
+
+# Financial analysis
+
+## Workflow
+
+1. **Define the fact** — resolve entity, metric, period basis, fiscal period, report scope, assurance, actuality, currency, unit, and scale.
+2. **Select authority** — use verified structured facts for exact values and cited source text for narrative explanation.
+3. **Retrieve** — find relevant statements, notes, and source tables within the authorized scope.
+4. **Open cells** — fetch every source cell used in a displayed number, formula, subtotal, or comparison.
+5. **Check dimensions** — reject mixed currencies, units, scales, scopes, actuality, or incompatible periods.
+6. **Calculate** — use only approved formulas over verified observations; show inputs and preserve precision.
+7. **Explain** — distinguish reported facts from interpretation, forecast, assumption, and scenario.
+8. **Limit** — abstain from exact output when verified dimensions or citation closure are missing.
+
+## Completion criterion
+
+Complete only when every displayed value has one verified source observation and complete dimensions, every calculation names its inputs, and narrative claims cite their source passages.
+
+## Related public references
+
+- How evidence works
+- Multi-page table safety
+
+---
+Source file: skills/period-comparison/SKILL.md
+---
+
+# Period comparison
+
+## Workflow
+
+1. **Resolve periods** — identify fiscal period, reporting frequency, comparison basis, and source version for every side.
+2. **Match dimensions** — require compatible entity, metric, scope, assurance, actuality, currency, unit, and scale.
+3. **Detect restatements** — prefer explicit comparable-period values where available and preserve both original and restated evidence.
+4. **Fetch sources** — open every cited cell or passage from each period.
+5. **Compute** — calculate deltas or rates only from verified compatible values; retain precision and formula identity.
+6. **Explain** — separate observed change from source-stated drivers and analyst interpretation.
+7. **Limit** — mark non-comparable, partial, missing, or conflicting periods instead of forcing a numeric comparison.
+
+## Completion criterion
+
+Complete only when every comparison pair passes the dimension checks and every delta can be reproduced from cited source values. Non-comparable pairs remain explicit.
+
+## Related public references
+
+- Financial analysis
+- Versioning and conflicts
+
+---
+Source file: skills/source-intake/SKILL.md
+---
+
+# Source intake
+
+## Workflow
+
+1. **Declare rights** — record origin, confidentiality, allowed access lane, and authority expectations before content processing.
+2. **Identify** — resolve entity, document family, reporting period, scope, language, and source location.
+3. **Submit once** — use immutable bytes and one idempotency key. Do not replay an uncertain accepted submission.
+4. **Observe** — monitor bounded processing without exposing credentials or source bodies in status logs.
+5. **Validate** — require complete page coverage, source hashes, document identity, extraction QA, and citation-addressable output.
+6. **Review** — route ambiguity, partial extraction, conflicting identity, and substantive reconstruction to human review.
+7. **Publish** — make evidence searchable only after explicit policy, quality, authority, and current-version gates pass.
+
+## Completion criterion
+
+Complete only when the immutable source and its identity are recorded, every processing unit has a terminal disposition, and publication or withholding is explicit. An accepted-state-unknown submission remains quarantined without automatic replay.
+
+## Related public references
+
+- Authority and access
+- Versioning and conflicts
+
+---
+Source file: skills/table-reconstruction/SKILL.md
+---
+
+# Table reconstruction
+
+## Workflow
+
+1. **Collect** — load every physical fragment with document, page, table, cell, and citation identity.
+2. **Preserve** — retain raw cell strings, row and column spans, headers, units, periods, and source order.
+3. **Propose** — identify possible continuations using adjacency, explicit continuation labels, repeated headers, and compatible geometry.
+4. **Validate** — require matching document, logical table, columns, spans, units, periods, scope, and total behavior.
+5. **Separate** — keep incompatible or ambiguous fragments distinct and assign a review state.
+6. **Project** — build long-form observations from validated source cells. A pivoted table or chart resolves values from those observations rather than model output.
+7. **Cite** — attach source-cell citations to every displayed value and expose physical fragments for inspection.
+
+## Guardrails
+
+Never pad, truncate, reorder, infer, or generate cells to make a table rectangular. Never treat embedding similarity or a model-proposed join as verified structure. Charts remain supplementary to an accessible cited table.
+
+## Completion criterion
+
+Complete only when every joined fragment passes deterministic compatibility checks and every displayed value maps to source cells. Otherwise return separate cited fragments with a review limitation.
+
+## Related public references
+
+- Multi-page table safety
+- How evidence works
+
+---
+Source file: skills/working-project/SKILL.md
+---
+
+# Working project
+
+## Workflow
+
+1. **Create scope** — name the research question, entities, periods, answer class, and evidence boundary.
+2. **Collect references** — store citation and document-version references rather than copying source bodies as new authority.
+3. **Write claims** — label observations, interpretations, assumptions, forecasts, risks, catalysts, and open questions.
+4. **Revalidate** — re-fetch citations before displaying, sharing, or exporting a material claim.
+5. **Append** — preserve project history and supersession; do not overwrite earlier evidence or conclusions silently.
+6. **Separate publication** — keep editable analyst work outside sealed evidence. Publish a source or correction only through the governed intake and review workflow.
+7. **Export** — include citations, limitations, version time, and unresolved conflicts with the narrative.
+
+## Completion criterion
+
+Complete only when every material project claim has a current evidence reference or an unresolved label, project history remains append-only, and no editable note is represented as source authority.
+
+## Related public references
+
+- Citation audit
+- How evidence works
+
+---
+Source file: plugins/index.md
+---
+
+# Portable agent template
+
+The [Research Wiki agent template](https://kitkitkittt.github.io/research-wiki/plugins/research-wiki-agent) is a deployment-neutral directory of portable source files. It is not directly installable until a named client adapts the MCP and skill files through its supported custom-integration mechanisms.
+
+## Included
+
+- a versioned local file-contract manifest with `directInstall: false`;
+- a remote MCP placeholder;
+- all eight public research, evidence-integrity, source-intake, and working-project skills;
+- no credentials or private deployment values.
+
+Follow the [plugin installation guide](https://kitkitkittt.github.io/research-wiki/guides/plugin-installation/). The repository validator checks that bundled skills are byte-identical to the canonical skill directories.
+
+---
+Source file: plugins/research-wiki-agent/index.md
+---
+
+# Research Wiki agent plugin
+
+This directory contains portable **source files**, not a client-vendor package and not a direct-install artifact. Its local contract is intentionally small:
+
+- `plugin.json` identifies the template version, `directInstall: false`, and relative artifact locations;
+- `mcp.json` supplies a remote Streamable HTTP placeholder;
+- `skills/*/SKILL.md` contains canonical agent process guidance;
+- authentication remains in the client or deployment environment.
+
+## Install
+
+1. Copy this directory to a temporary configuration workspace.
+2. Replace the placeholder MCP URL in `mcp.json`.
+3. Import the MCP JSON and skill directories using your client's documented custom-MCP and custom-skill mechanisms.
+4. If a client requires another manifest shape, adapt `plugin.json` at the client boundary while preserving `mcp.json` and the skill bytes.
+
+No universal plugin-install format exists across AI clients. The public package documents its own file contract rather than claiming compatibility with an unnamed client.
+
+---
+Source file: plugins/research-wiki-agent/plugin.json
+---
+
+```json
+{
+  "schemaVersion": "1.0",
+  "name": "research-wiki-agent",
+  "version": "0.1.0",
+  "description": "Portable evidence-first skill and MCP source-file template.",
+  "packageType": "portable-source-template",
+  "directInstall": false,
+  "mcp": "mcp.json",
+  "skills": "skills"
+}
+```
+
+---
+Source file: plugins/research-wiki-agent/mcp.json
+---
+
+```json
+{
+  "mcpServers": {
+    "research-wiki": {
+      "type": "streamable-http",
+      "url": "https://<your-host>/mcp/"
+    }
+  }
+}
+```
