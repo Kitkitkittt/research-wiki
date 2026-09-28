@@ -42,6 +42,8 @@ python3 scripts/validate_public.py --site-url https://kitkitkittt.github.io/rese
 python3 scripts/validate_public.py --public-alias-url https://research.vnibb.xyz/
 ```
 
+The public alias probe checks routes, skill and agent file content and MIME types, and the stylesheet within a shared 90-second deadline (below the deployment step's two-minute timeout). The deadline interrupts stalled response bodies as well as requests between retries. HTTP gateway and network errors remain failures after bounded retries; a reachable page with the wrong path, content, or MIME type fails immediately. The error identifies the failing URL and the last response or network error.
+
 ## Contributing
 
 Read [CONTRIBUTING.md](CONTRIBUTING.md). Public content must use placeholders for hosts and credentials and must contain no private deployment details, customer data, machine paths, or generated secrets.
