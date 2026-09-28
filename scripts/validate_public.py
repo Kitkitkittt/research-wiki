@@ -4,13 +4,22 @@ import argparse
 import hashlib
 import json
 import re
+import signal
 import shutil
 import sys
 import time
+from collections.abc import Callable
+from contextlib import contextmanager
+from http.client import HTTPResponse
 from pathlib import Path
 from urllib.error import HTTPError, URLError
 from urllib.parse import unquote, urljoin, urlsplit
 from urllib.request import Request, urlopen
+
+ALIAS_PROBE_BUDGET_SECONDS = 90
+ALIAS_REQUEST_TIMEOUT_SECONDS = 8
+ALIAS_RETRY_DELAY_SECONDS = 2
+ALIAS_MAX_ATTEMPTS = 6
 
 ROOT = Path(__file__).resolve().parents[1]
 SKIP_PARTS = {".git", "_site", "vendor", "__pycache__"}
@@ -574,68 +583,117 @@ def validate_deployed_site(site_url: str, errors: list[str]) -> None:
         errors.append(f"custom 404 failed: {missing_url}: {exc}")
 
 
+class AliasDeadlineExceeded(Exception):
+    """Separate from OSError so socket address fallback cannot swallow the alarm."""
+
+
+@contextmanager
+def alias_request_deadline(remaining: float):
+    """Interrupt stalled opens and reads; called on the POSIX CLI main thread."""
+    def expired(_signum: int, _frame: object) -> None:
+        raise AliasDeadlineExceeded()
+
+    previous_handler = signal.signal(signal.SIGALRM, expired)
+    started = time.monotonic()
+    previous_timer = signal.setitimer(signal.ITIMER_REAL, remaining)
+    try:
+        yield
+    finally:
+        signal.setitimer(signal.ITIMER_REAL, 0)
+        signal.signal(signal.SIGALRM, previous_handler)
+        if previous_timer[0]:
+            signal.setitimer(
+                signal.ITIMER_REAL,
+                max(0.000001, previous_timer[0] - (time.monotonic() - started)),
+                previous_timer[1],
+            )
+
+
+def probe_alias_url(
+    url: str, deadline: float, check: Callable[[HTTPResponse], str | None]
+) -> str | None:
+    last_error = "no response"
+    for attempt in range(ALIAS_MAX_ATTEMPTS):
+        remaining = deadline - time.monotonic()
+        if remaining <= 0:
+            return f"probe budget exhausted after {ALIAS_PROBE_BUDGET_SECONDS}s; last failure: {last_error}"
+        try:
+            with alias_request_deadline(remaining):
+                request = Request(url, headers={"User-Agent": "research-wiki-validator"})
+                with urlopen(request, timeout=min(ALIAS_REQUEST_TIMEOUT_SECONDS, remaining)) as response:
+                    mismatch = check(response)
+                    if mismatch is None:
+                        return None
+                    # A successful HTTP response with the wrong contract is not a transient outage.
+                    return mismatch
+        except AliasDeadlineExceeded:
+            return (f"probe budget exhausted after {ALIAS_PROBE_BUDGET_SECONDS}s at {url} "
+                    f"while opening or reading response; last failure: {last_error}")
+        except HTTPError as exc:
+            last_error = str(exc)
+            exc.close()
+        except (URLError, TimeoutError) as exc:
+            last_error = str(exc)
+        if attempt < ALIAS_MAX_ATTEMPTS - 1:
+            remaining = deadline - time.monotonic()
+            if remaining > 0:
+                time.sleep(min(ALIAS_RETRY_DELAY_SECONDS, remaining))
+    if time.monotonic() >= deadline:
+        return f"probe budget exhausted after {ALIAS_PROBE_BUDGET_SECONDS}s; last failure: {last_error}"
+    return f"failed after {ALIAS_MAX_ATTEMPTS} attempts; last failure: {last_error}"
+
+
 def validate_public_alias(site_url: str, errors: list[str]) -> None:
     base = site_url.rstrip("/") + "/"
+    deadline = time.monotonic() + ALIAS_PROBE_BUDGET_SECONDS
     for route in PUBLIC_ALIAS_ROUTES:
         url = urljoin(base, route)
-        last_error = ""
-        for attempt in range(6):
-            try:
-                request = Request(url, headers={"User-Agent": "research-wiki-validator"})
-                with urlopen(request, timeout=20) as response:
-                    body = response.read(16_384).lower()
-                    if (
-                        response.status == 200
-                        and response.headers.get_content_type() == "text/html"
-                        and urlsplit(response.geturl()).path.rstrip("/") == urlsplit(url).path.rstrip("/")
-                        and b'<main id="content"' in body
-                    ):
-                        break
-                    last_error = f"HTTP {response.status} {response.headers.get_content_type()} at {response.geturl()}"
-            except (HTTPError, URLError, TimeoutError) as exc:
-                last_error = str(exc)
-            if attempt < 5:
-                time.sleep(5)
-        else:
-            errors.append(f"public alias route failed: {url}: {last_error}")
+        expected_path = urlsplit(url).path.rstrip("/")
+
+        def check_route(response: HTTPResponse) -> str | None:
+            body = response.read(16_384).lower()
+            content_type = response.headers.get_content_type()
+            final_url = response.geturl()
+            if (response.status == 200 and content_type == "text/html"
+                    and urlsplit(final_url).path.rstrip("/") == expected_path
+                    and b'<main id="content"' in body):
+                return None
+            return f"HTTP {response.status} {content_type} at {final_url}; expected HTML route {url} with main content"
+
+        failure = probe_alias_url(url, deadline, check_route)
+        if failure:
+            errors.append(f"public alias route failed: {url}: {failure}")
+            return
     for route, source, content_type in PUBLIC_ALIAS_FILES:
         url = urljoin(base, route)
         expected = (ROOT / source).read_bytes()
-        last_error = ""
-        for attempt in range(6):
-            try:
-                request = Request(url, headers={"User-Agent": "research-wiki-validator"})
-                with urlopen(request, timeout=20) as response:
-                    observed = response.read()
-                    if (
-                        response.status == 200
-                        and response.headers.get_content_type() == content_type
-                        and urlsplit(response.geturl()).path == urlsplit(url).path
-                        and observed == expected
-                    ):
-                        break
-                    last_error = f"HTTP {response.status} {response.headers.get_content_type()} at {response.geturl()}"
-            except (HTTPError, URLError, TimeoutError) as exc:
-                last_error = str(exc)
-            if attempt < 5:
-                time.sleep(5)
-        else:
-            errors.append(f"public alias file failed: {url}: {last_error}")
+        expected_path = urlsplit(url).path
+
+        def check_file(response: HTTPResponse) -> str | None:
+            observed = response.read()
+            observed_type = response.headers.get_content_type()
+            final_url = response.geturl()
+            if (response.status == 200 and observed_type == content_type
+                    and urlsplit(final_url).path == expected_path and observed == expected):
+                return None
+            return (f"HTTP {response.status} {observed_type} at {final_url}; expected "
+                    f"{content_type} at {url} with content matching {source}")
+
+        failure = probe_alias_url(url, deadline, check_file)
+        if failure:
+            errors.append(f"public alias file failed: {url}: {failure}")
+            return
     asset_url = urljoin(base, "research-wiki/assets/styles.css")
-    last_error = ""
-    for attempt in range(6):
-        try:
-            request = Request(asset_url, headers={"User-Agent": "research-wiki-validator"})
-            with urlopen(request, timeout=20) as response:
-                if response.status == 200 and response.headers.get_content_type() == "text/css":
-                    break
-                last_error = f"HTTP {response.status} {response.headers.get_content_type()}"
-        except (HTTPError, URLError, TimeoutError) as exc:
-            last_error = str(exc)
-        if attempt < 5:
-            time.sleep(5)
-    else:
-        errors.append(f"public alias asset failed: {asset_url}: {last_error}")
+
+    def check_asset(response: HTTPResponse) -> str | None:
+        observed_type = response.headers.get_content_type()
+        if response.status == 200 and observed_type == "text/css":
+            return None
+        return f"HTTP {response.status} {observed_type}; expected HTTP 200 text/css"
+
+    failure = probe_alias_url(asset_url, deadline, check_asset)
+    if failure:
+        errors.append(f"public alias asset failed: {asset_url}: {failure}")
 
 
 def main() -> int:
