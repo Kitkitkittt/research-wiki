@@ -1,6 +1,8 @@
 {
   "content_sha256": "92235c3af356e49a1c02c9f16665840f1ec6b2931ef4eb0633928b0363c9f2aa",
   "content_hash_scope": "capability-registry-entry",
+  "metadata_scope": "static-public-descriptor; content_sha256 binds the unchanged upstream registry entry, not these portable instructions or live readiness",
+  "runtime_readiness_source": "authenticated tools/list and system.describe_capabilities callable-capability-discovery-v1",
   "input_schema_ref": null,
   "mcp_tool_schemas": {
     "system.describe_capabilities": {
@@ -15,6 +17,7 @@
       "name": "system.describe_capabilities",
       "output_schema": {
         "additionalProperties": true,
+        "schema_version_ref": "callable-capability-discovery-v1",
         "type": "object"
       },
       "readiness": "ready",
@@ -26,7 +29,10 @@
     "system.describe_capabilities"
   ],
   "missing_mcp_tools": [],
-  "output_schema_ref": "runtime-capabilities-v1",
+  "output_schema_ref": "callable-capability-discovery-v1",
+  "rest_output_schema_refs": {
+    "GET /api/research-brain/runtime/capabilities": "runtime-capabilities-v1"
+  },
   "permitted_lanes": [
     "public",
     "analyst"

@@ -87,9 +87,6 @@ DEPLOYED_ROUTES = (
     "404.html",
 )
 DEPLOYED_AGENT_FILES = ("llms.txt", "llms-full.txt")
-PUBLIC_ALIAS_ROUTES = tuple(
-    route for route in DEPLOYED_ROUTES if route not in {"./", "404.html"}
-)
 DEPLOYED_SKILL_FILES = tuple(
     (f"skills/{name}/SKILL.md", Path("skills") / name / "SKILL.md")
     for name in SKILL_NAMES
@@ -100,15 +97,9 @@ DEPLOYED_SKILL_FILES = tuple(
 DEPLOYED_DOWNLOADS = tuple(
     (f"downloads/skills/{name}/SKILL.md", Path("skills") / name / "SKILL.md")
     for name in SKILL_NAMES
-)
-PUBLIC_ALIAS_FILES = (
-    *(
-        (route, source, "application/json" if source.suffix == ".json" else "text/markdown")
-        for route, source in DEPLOYED_SKILL_FILES
-        if source.parts[:2] == ("skills", "setup-and-discovery")
-    ),
-    *((route, source, "text/markdown") for route, source in DEPLOYED_DOWNLOADS),
-    *((route, Path(route), "text/plain") for route in DEPLOYED_AGENT_FILES),
+) + tuple(
+    (f"downloads/skills/{path.parent.name}/schema.json", path.relative_to(ROOT))
+    for path in sorted((ROOT / "skills").glob("*/schema.json"))
 )
 
 
@@ -181,7 +172,8 @@ def validate_public_text(errors: list[str]) -> None:
                 )
         forbidden_tokens = [
             token
-            for token in TOKEN.findall(text.casefold())
+            # The exact documented environment variable is public, not a brand disclosure.
+            for token in TOKEN.findall(re.sub(r"\bVCI_RESEARCH_API_KEY\b", "PUBLIC_ENV_NAME", text).casefold())
             if (
                 (digest := hashlib.sha256(token.encode()).hexdigest())
                 in FORBIDDEN_TOKEN_SHA256
@@ -335,13 +327,31 @@ def validate_plugin_contract(errors: list[str]) -> None:
     server = mcp.get("mcpServers", {}).get("research-wiki", {})
     if server != {
         "type": "streamable-http",
-        "url": "https://<your-host>/mcp/",
+        "url": "https://<your-host>/mcp/research-brain/",
     }:
         errors.append("MCP template does not match the public placeholder contract")
     for field in ("mcp", "skills"):
         target = root / str(plugin.get(field, ""))
         if not target_exists(target.resolve()):
             errors.append(f"plugin artifact missing: {field}")
+
+
+def validate_setup_contract(errors: list[str]) -> None:
+    path = ROOT / "skills" / "setup-and-discovery" / "schema.json"
+    try:
+        schema = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        errors.append("setup discovery schema unavailable")
+        return
+    tool = schema.get("mcp_tool_schemas", {}).get("system.describe_capabilities", {})
+    if (
+        schema.get("content_hash_scope") != "capability-registry-entry"
+        or schema.get("output_schema_ref") != "callable-capability-discovery-v1"
+        or tool.get("output_schema", {}).get("schema_version_ref") != "callable-capability-discovery-v1"
+        or schema.get("rest_output_schema_refs", {}).get("GET /api/research-brain/runtime/capabilities") != "runtime-capabilities-v1"
+        or not schema.get("runtime_readiness_source")
+    ):
+        errors.append("setup discovery must distinguish static metadata, REST matrix, and callable MCP output")
 
 
 def validate_plugin_parity(errors: list[str]) -> None:
@@ -370,10 +380,8 @@ def public_site_url() -> str:
     values: dict[str, str] = {}
     for line in (ROOT / "_config.yml").read_text(encoding="utf-8").splitlines():
         key, separator, value = line.partition(":")
-        if separator and key in {"url", "baseurl", "public_url"}:
+        if separator and key in {"url", "baseurl"}:
             values[key] = value.strip().strip("'\"")
-    if values.get("public_url"):
-        return values["public_url"].rstrip("/") + "/"
     if not values.get("url"):
         raise ValueError("_config.yml requires url for agent artifacts")
     return values["url"].rstrip("/") + "/" + values.get("baseurl", "").strip("/") + "/"
@@ -503,9 +511,12 @@ def export_skill_downloads(destination: Path) -> None:
             target.parent.mkdir(parents=True, exist_ok=True)
             shutil.copyfile(source, target)
     for source in sorted((ROOT / "skills").glob("*/schema.json")):
-        target = root / source.relative_to(ROOT)
-        target.parent.mkdir(parents=True, exist_ok=True)
-        shutil.copyfile(source, target)
+        for target in (
+            root / source.relative_to(ROOT),
+            root / "downloads" / source.relative_to(ROOT),
+        ):
+            target.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copyfile(source, target)
 
 
 def validate_deployed_site(site_url: str, errors: list[str]) -> None:
@@ -574,74 +585,9 @@ def validate_deployed_site(site_url: str, errors: list[str]) -> None:
         errors.append(f"custom 404 failed: {missing_url}: {exc}")
 
 
-def validate_public_alias(site_url: str, errors: list[str]) -> None:
-    base = site_url.rstrip("/") + "/"
-    for route in PUBLIC_ALIAS_ROUTES:
-        url = urljoin(base, route)
-        last_error = ""
-        for attempt in range(6):
-            try:
-                request = Request(url, headers={"User-Agent": "research-wiki-validator"})
-                with urlopen(request, timeout=20) as response:
-                    body = response.read(16_384).lower()
-                    if (
-                        response.status == 200
-                        and response.headers.get_content_type() == "text/html"
-                        and urlsplit(response.geturl()).path.rstrip("/") == urlsplit(url).path.rstrip("/")
-                        and b'<main id="content"' in body
-                    ):
-                        break
-                    last_error = f"HTTP {response.status} {response.headers.get_content_type()} at {response.geturl()}"
-            except (HTTPError, URLError, TimeoutError) as exc:
-                last_error = str(exc)
-            if attempt < 5:
-                time.sleep(5)
-        else:
-            errors.append(f"public alias route failed: {url}: {last_error}")
-    for route, source, content_type in PUBLIC_ALIAS_FILES:
-        url = urljoin(base, route)
-        expected = (ROOT / source).read_bytes()
-        last_error = ""
-        for attempt in range(6):
-            try:
-                request = Request(url, headers={"User-Agent": "research-wiki-validator"})
-                with urlopen(request, timeout=20) as response:
-                    observed = response.read()
-                    if (
-                        response.status == 200
-                        and response.headers.get_content_type() == content_type
-                        and urlsplit(response.geturl()).path == urlsplit(url).path
-                        and observed == expected
-                    ):
-                        break
-                    last_error = f"HTTP {response.status} {response.headers.get_content_type()} at {response.geturl()}"
-            except (HTTPError, URLError, TimeoutError) as exc:
-                last_error = str(exc)
-            if attempt < 5:
-                time.sleep(5)
-        else:
-            errors.append(f"public alias file failed: {url}: {last_error}")
-    asset_url = urljoin(base, "research-wiki/assets/styles.css")
-    last_error = ""
-    for attempt in range(6):
-        try:
-            request = Request(asset_url, headers={"User-Agent": "research-wiki-validator"})
-            with urlopen(request, timeout=20) as response:
-                if response.status == 200 and response.headers.get_content_type() == "text/css":
-                    break
-                last_error = f"HTTP {response.status} {response.headers.get_content_type()}"
-        except (HTTPError, URLError, TimeoutError) as exc:
-            last_error = str(exc)
-        if attempt < 5:
-            time.sleep(5)
-    else:
-        errors.append(f"public alias asset failed: {asset_url}: {last_error}")
-
-
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--site-url")
-    parser.add_argument("--public-alias-url")
     parser.add_argument("--export-downloads", type=Path)
     parser.add_argument("--write-agent-files", action="store_true")
     arguments = parser.parse_args()
@@ -654,14 +600,13 @@ def main() -> int:
     validate_front_matter(errors)
     validate_links(errors)
     validate_plugin_contract(errors)
+    validate_setup_contract(errors)
     validate_plugin_parity(errors)
     validate_agent_artifacts(errors)
     if not errors and arguments.export_downloads:
         export_skill_downloads(arguments.export_downloads)
     if arguments.site_url:
         validate_deployed_site(arguments.site_url, errors)
-    if arguments.public_alias_url:
-        validate_public_alias(arguments.public_alias_url, errors)
     if errors:
         for error in errors:
             print(error, file=sys.stderr)

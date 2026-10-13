@@ -1,6 +1,6 @@
 # Research Wiki — full public agent context
 
-Source: https://research.vnibb.xyz/llms.txt
+Source: https://kitkitkittt.github.io/research-wiki/llms.txt
 Boundary: public reference material only; no credentials, private evidence, live endpoint, or deployment authority.
 
 ---
@@ -147,33 +147,33 @@ Source file: docs/index.md
 
 # Documentation
 
-Technical contracts and design guidance for evidence-first research systems. Analysts can read these pages directly; agents should start from [`llms.txt`](https://research.vnibb.xyz/llms.txt) or use **Copy all for agent** above for the full public context.
+Technical contracts and design guidance for evidence-first research systems. Analysts can read these pages directly; agents should start from [`llms.txt`](https://kitkitkittt.github.io/research-wiki/llms.txt) or use **Copy all for agent** above for the full public context.
 
 > **Agent handoff:** give an agent the documentation index URL shown in the handoff panel. It can fetch only the relevant pages, canonical skills, or full bundle from that index.
 
 ## Start here
 
-- [Setup and discovery](https://research.vnibb.xyz/docs/setup-and-discovery/)
-- [Quick start](https://research.vnibb.xyz/guides/quickstart/)
-- [MCP setup](https://research.vnibb.xyz/guides/mcp-setup/)
+- [Setup and discovery](https://kitkitkittt.github.io/research-wiki/docs/setup-and-discovery/)
+- [Quick start](https://kitkitkittt.github.io/research-wiki/guides/quickstart/)
+- [MCP setup](https://kitkitkittt.github.io/research-wiki/guides/mcp-setup/)
 
 ## Foundations
 
-- [How evidence works](https://research.vnibb.xyz/docs/how-evidence-works/)
-- [Authority and access](https://research.vnibb.xyz/docs/authority-and-access/)
-- [Search, citations, and abstention](https://research.vnibb.xyz/docs/search-and-citations/)
+- [How evidence works](https://kitkitkittt.github.io/research-wiki/docs/how-evidence-works/)
+- [Authority and access](https://kitkitkittt.github.io/research-wiki/docs/authority-and-access/)
+- [Search, citations, and abstention](https://kitkitkittt.github.io/research-wiki/docs/search-and-citations/)
 
 ## Source integrity
 
-- [Versioning and conflicts](https://research.vnibb.xyz/docs/versioning-and-conflicts/)
-- [Multi-page table safety](https://research.vnibb.xyz/docs/table-safety/)
-- [Security model](https://research.vnibb.xyz/docs/security-model/)
+- [Versioning and conflicts](https://kitkitkittt.github.io/research-wiki/docs/versioning-and-conflicts/)
+- [Multi-page table safety](https://kitkitkittt.github.io/research-wiki/docs/table-safety/)
+- [Security model](https://kitkitkittt.github.io/research-wiki/docs/security-model/)
 
 ## Integration
 
-- [MCP tool design guidance](https://research.vnibb.xyz/docs/mcp-tool-contract/)
-- [Portable agent-template contract](https://research.vnibb.xyz/docs/agent-plugin-contract/)
-- [Glossary](https://research.vnibb.xyz/docs/glossary/)
+- [MCP tool design guidance](https://kitkitkittt.github.io/research-wiki/docs/mcp-tool-contract/)
+- [Portable agent-template contract](https://kitkitkittt.github.io/research-wiki/docs/agent-plugin-contract/)
+- [Glossary](https://kitkitkittt.github.io/research-wiki/docs/glossary/)
 
 ---
 Source file: docs/mcp-tool-contract.md
@@ -276,30 +276,30 @@ Use the public documentation without authentication. Sign in to the workspace or
 | Surface | URL | Authentication |
 | --- | --- | --- |
 | Workspace | `https://research.vnibb.xyz/` | Required |
-| Documentation | `https://research.vnibb.xyz/docs/` | Public |
+| Documentation | `https://kitkitkittt.github.io/research-wiki/docs/` | Public |
 | MCP | `https://research.vnibb.xyz/mcp/research-brain/` | Required |
-| Setup skill | `https://research.vnibb.xyz/skills/setup-and-discovery/SKILL.md` | Public |
-| Setup schema | `https://research.vnibb.xyz/skills/setup-and-discovery/schema.json` | Public |
+| Raw setup skill | `https://kitkitkittt.github.io/research-wiki/downloads/skills/setup-and-discovery/SKILL.md` | Public |
+| Setup schema | `https://kitkitkittt.github.io/research-wiki/skills/setup-and-discovery/schema.json` | Public |
 
 ## Safe connection sequence
 
-1. Open the workspace and authenticate with your assigned identity.
-2. Keep credentials in the client or approved secret store.
-3. Initialize the MCP session at the published endpoint.
-4. Read the runtime capability matrix or call `system.describe_capabilities`.
-5. List tools for the current identity.
-6. Select only capabilities reported as ready and permitted.
-7. Stop on typed authentication, permission, readiness, or scope errors.
+1. Obtain a deployment-issued API key for your assigned identity; workspace sign-in alone does not configure an external MCP client.
+2. Keep credentials in the client environment or approved secret store. Follow [manual Codex setup](https://kitkitkittt.github.io/research-wiki/guides/mcp-setup/#manual-codex-setup) when using Codex.
+3. Initialize the MCP session at the absolute published endpoint, then send `notifications/initialized` and authenticated `tools/list`.
+4. If listed, call `system.describe_capabilities`: its MCP output is `callable-capability-discovery-v1`. REST `GET /api/research-brain/runtime/capabilities` returns the separate `runtime-capabilities-v1` matrix.
+5. Select only currently callable tools permitted to the identity. Public skill `readiness` and hashes are static descriptor metadata, not live readiness or authorization.
+6. Complete one authorized evidence search and re-fetch its citation before claiming research works. Discovery-only is **connected, research blocked**.
+7. Stop on typed authentication, permission, readiness, or scope errors. Retained archive tools, when callable, provide separately labeled document evidence, not canonical company mapping or Financial Truth.
 
 ## Agent setup
 
-Give an agent the [setup skill](https://research.vnibb.xyz/skills/setup-and-discovery/SKILL.md) and its [machine schema](https://research.vnibb.xyz/skills/setup-and-discovery/schema.json). For broader context, use [`llms.txt`](https://research.vnibb.xyz/llms.txt) rather than copying unrelated documentation.
+Give an agent the [raw setup skill](https://kitkitkittt.github.io/research-wiki/downloads/skills/setup-and-discovery/SKILL.md) and its [machine schema](https://kitkitkittt.github.io/research-wiki/skills/setup-and-discovery/schema.json). For broader context, use [`llms.txt`](https://kitkitkittt.github.io/research-wiki/llms.txt) rather than copying unrelated documentation.
 
 ## Security boundary
 
 Public skill and schema files describe behavior; they do not grant access. Never put a password, session cookie, bearer token, private source, or internal path into prompts, skill directories, repository files, or URLs.
 
-Continue with [MCP setup](https://research.vnibb.xyz/guides/mcp-setup/) and [authority and access](https://research.vnibb.xyz/docs/authority-and-access/).
+Continue with [MCP setup](https://kitkitkittt.github.io/research-wiki/guides/mcp-setup/) and [authority and access](https://kitkitkittt.github.io/research-wiki/docs/authority-and-access/).
 
 ---
 Source file: docs/table-safety.md
@@ -398,11 +398,31 @@ Use a zero-model path when a requested fact is already represented by a verified
 
 Provide the model only authorized, bounded, citation-addressable evidence. Require claim-to-citation closure and preserve conflicting versions rather than silently choosing one.
 
+## Retained archive document evidence
+
+This is a separate, conditional document workflow, not an alias for canonical company research. The public reference does not promise that these tools are deployed or ready.
+
+| Tool | Required scope |
+| --- | --- |
+| `archive.list_documents`, `archive.search` | `research:read` |
+| `archive.fetch` | `citations:read` |
+| `archive.get_resources` | `resources:read` |
+
+Scopes alone do not grant access: the current runtime must authorize the retained public document membership, caller, and release. Use finite limits and returned pagination cursors; do not widen the archive label or claim canonical mapping from these tools.
+
+1. Initialize an authenticated session and inspect `tools/list`; call `system.describe_capabilities` only if listed. Continue only when current caller-specific discovery reports `archive.list_documents`, `archive.search`, `archive.fetch`, and `archive.get_resources` as callable. Otherwise report **connected, archive research blocked**, with the observed blocker.
+2. Use the discovered input schemas: `archive.list_documents(ticker, query='', cursor=0, limit=20)` and `archive.search(question, ticker, limit=5)` require an explicit ticker archive label. A ticker is not a canonical company ID. Never invent a company mapping or omit the ticker to widen retrieval.
+3. Preserve returned artifact-version and citation identities. Re-fetch a citation from the same caller's prior search in the current release with `archive.fetch(citation_id)` and compare its evidence before synthesizing a claim. A copied or guessed citation ID is not authority.
+4. Request `archive.get_resources(artifact_version_id)` for the returned artifact-version ID only when authorized. Open only runtime-returned archive resource URLs, preserving the original file hash and page location; do not construct canonical navigator links or guess resource IDs.
+5. Label the result **retained document evidence**, preserve provenance and limitations, and abstain when source evidence or permission is missing. Retained documents do not become verified structured Financial Truth; a numeric claim still needs exact source dimensions and evidence.
+
+Completion requires an actual authorized search and citation re-fetch, not successful discovery alone. Missing tools, blocked scope, unavailable canonical company mapping, or a resource authorization failure remains a limitation, never a reason to bypass the gate.
+
 ## Completion criterion
 
 The workflow is complete when every material claim maps to current authorized evidence, every displayed number preserves its source dimensions, and every unsupported part is recorded as a limitation.
 
-Review the [evidence-first research skill](https://research.vnibb.xyz/skills/reference/#evidence-first-research), then download its canonical payload from the reference page when configuring a client.
+Review the [evidence-first research skill](https://kitkitkittt.github.io/research-wiki/skills/reference/#evidence-first-research), then download its canonical payload from the reference page when configuring a client.
 
 ---
 Source file: guides/index.md
@@ -412,11 +432,11 @@ Source file: guides/index.md
 
 Use these guides in order when setting up a new Research Wiki agent surface.
 
-1. [Quick start](https://research.vnibb.xyz/guides/quickstart/) — understand the evidence-first workflow.
-2. [MCP setup](https://research.vnibb.xyz/guides/mcp-setup/) — connect and authenticate a remote client.
-3. [Portable template adaptation](https://research.vnibb.xyz/guides/plugin-installation/) — adapt MCP and skill source files through a named client.
-4. [Agent workflows](https://research.vnibb.xyz/guides/agent-workflows/) — coordinate retrieval, verification, and synthesis.
-5. [Troubleshooting](https://research.vnibb.xyz/guides/troubleshooting/) — distinguish transport, authentication, authorization, and evidence failures.
+1. [Quick start](https://kitkitkittt.github.io/research-wiki/guides/quickstart/) — understand the evidence-first workflow.
+2. [MCP setup](https://kitkitkittt.github.io/research-wiki/guides/mcp-setup/) — connect and authenticate a remote client.
+3. [Portable template adaptation](https://kitkitkittt.github.io/research-wiki/guides/plugin-installation/) — adapt MCP and skill source files through a named client.
+4. [Agent workflows](https://kitkitkittt.github.io/research-wiki/guides/agent-workflows/) — coordinate retrieval, verification, and synthesis.
+5. [Troubleshooting](https://kitkitkittt.github.io/research-wiki/guides/troubleshooting/) — distinguish transport, authentication, authorization, and evidence failures.
 
 ---
 Source file: guides/mcp-setup.md
@@ -424,13 +444,13 @@ Source file: guides/mcp-setup.md
 
 # MCP setup
 
-This site documents the hosted service and deployment-neutral MCP integration patterns. Keep credentials in the client configuration; template and skill files contain none.
+Public documentation and raw skill downloads live at `https://kitkitkittt.github.io/research-wiki/`. The hosted workspace and authenticated MCP endpoint are separate. Keep credentials in the client environment or approved secret store; template and skill files contain none.
 
 ## Required values
 
 - Hosted endpoint: `https://research.vnibb.xyz/mcp/research-brain/`
 - Deployment-neutral endpoint: `https://<your-host>/mcp/research-brain/`
-- Authentication: the bearer or OAuth method published by your deployment
+- Hosted authentication: deployment-issued API-key Bearer token; OAuth is not required or supplied by this setup
 - Client support: remote MCP over Streamable HTTP
 
 Keep the trailing slash when the operator publishes one. Some clients drop authorization headers while following redirects.
@@ -451,7 +471,29 @@ Keep the trailing slash when the operator publishes one. Some clients drop autho
 }
 ```
 
-If your client supports OAuth, use the deployment's authorization flow instead of a static bearer header.
+The JSON is a portable source example, not a universal client format. Use the named client's configuration below; configure other clients through their documented secret mechanism.
+
+## Manual Codex setup
+
+Obtain a deployment-issued key with the scopes and lane needed for your task. A principal identifier is not an API key. This manual connection does not require model-provider authorization, provider bootstrap, or an OAuth login.
+
+Add this to your local Codex `~/.codex/config.toml` (replace the host only for another deployment):
+
+```toml
+[mcp_servers.research_wiki]
+url = "https://research.vnibb.xyz/mcp/research-brain/"
+bearer_token_env_var = "VCI_RESEARCH_API_KEY"
+```
+
+In Bash, read the key without putting it in shell history, then start Codex from that environment:
+
+```bash
+read -rsp 'Deployment API key: ' VCI_RESEARCH_API_KEY; printf '\n'
+export VCI_RESEARCH_API_KEY
+codex
+```
+
+Restart an already-running client after supplying the variable. Do not print the variable or save the key in TOML, the repository, skill files, or prompts. A GUI client must receive the same variable through its approved launch environment.
 
 ## Session sequence
 
@@ -466,22 +508,22 @@ Treat `tools/list` as caller-specific. A server may hide tools whose required sc
 
 ## First research call
 
-1. Ask the client to describe available research capabilities.
-2. Resolve a stable entity identity before requesting company-specific evidence.
-3. Start with a discovery or cited-narrative task.
-4. Open one returned citation and compare it with the synthesized claim.
+1. Call `system.describe_capabilities` only if the authenticated `tools/list` exposes it. Its MCP result is `callable-capability-discovery-v1`; the REST runtime matrix is `runtime-capabilities-v1`.
+2. Select tools only when current caller-specific discovery reports them callable; static skill `ready` metadata does not prove runtime readiness.
+3. For canonical company research, resolve an authorized stable company identity. For retained documents, follow the separately labeled archive workflow in [agent workflows](https://kitkitkittt.github.io/research-wiki/guides/agent-workflows/), only if its tools are callable.
+4. Complete one authorized evidence search, re-fetch a returned citation, and compare its evidence with the claim. Discovery-only means **connected, research blocked**, not successful research.
 
 ## Safe error interpretation
 
 | Symptom | Likely class |
 | --- | --- |
 | DNS, TLS, timeout, or unsupported media type | Transport |
-| `401` or OAuth challenge | Authentication |
+| `401` or Bearer challenge | Authentication; check the deployment key environment |
 | Neutral missing-tool response | Authorization or readiness |
 | Typed abstention with limitations | Evidence cannot support the requested claim |
 | Partial result | Some bounded work completed; inspect limitations before reuse |
 
-Continue with [agent workflows](https://research.vnibb.xyz/guides/agent-workflows/) for tool-selection guidance.
+Continue with [agent workflows](https://kitkitkittt.github.io/research-wiki/guides/agent-workflows/) for tool-selection guidance.
 
 ---
 Source file: guides/plugin-installation.md
@@ -514,11 +556,11 @@ research-wiki-agent/
 ## Configure
 
 1. Confirm that your named AI client supports custom remote MCP configuration and custom skill files. Stop if either mechanism is unavailable.
-2. Copy [`plugins/research-wiki-agent`](https://research.vnibb.xyz/plugins/research-wiki-agent) to a temporary workspace, not directly into a vendor plugin directory.
-3. Replace `https://<your-host>/mcp/` in `mcp.json` with the endpoint supplied by your operator.
+2. Copy [`plugins/research-wiki-agent`](https://kitkitkittt.github.io/research-wiki/plugins/research-wiki-agent) to a temporary workspace, not directly into a vendor plugin directory.
+3. Replace `https://<your-host>/mcp/research-brain/` in `mcp.json` with the absolute endpoint supplied by your operator, preserving the canonical path and trailing slash.
 4. Import `mcp.json` through the client's custom MCP mechanism and each `skills/*/SKILL.md` through its custom skill mechanism.
-5. Configure authentication in the AI client or deployment integration, not in the template files.
-6. Start a new conversation and ask the client to list available Research Wiki tools and describe the evidence-first workflow.
+5. Configure authentication in the AI client's secret mechanism, not in the template files. For Codex, use the [manual environment-variable setup](https://kitkitkittt.github.io/research-wiki/guides/mcp-setup/#manual-codex-setup); do not import generic JSON as Codex TOML.
+6. Start a new conversation and request authenticated `tools/list` followed by callable capability discovery.
 
 ## Verify
 
@@ -527,9 +569,11 @@ The installation is complete when:
 - the client establishes one authenticated MCP session;
 - tool discovery returns only authorized tools;
 - the evidence-first research skill is available;
-- a discovery request returns a source reference;
-- opening the reference reproduces the cited evidence;
+- a currently callable, authorized research or retained archive search returns evidence with a citation;
+- re-fetching that citation reproduces the cited evidence;
 - no credential appears in the plugin directory.
+
+A connected session with discovery tools only is **research blocked**, not a completed installation for research. Public skill metadata and package hashes describe source compatibility, not live readiness or permission.
 
 ## Updates
 
@@ -569,7 +613,7 @@ Research Wiki separates the research experience into three layers:
 
 ## Next step
 
-If you have an operator-supplied service, connect a client with the [MCP setup guide](https://research.vnibb.xyz/guides/mcp-setup/), then adapt the [portable source template](https://research.vnibb.xyz/guides/plugin-installation/). Otherwise, browse the [human-readable skill reference](https://research.vnibb.xyz/skills/reference/) and use the patterns without claiming a live integration.
+If you have an operator-supplied service, connect a client with the [MCP setup guide](https://kitkitkittt.github.io/research-wiki/guides/mcp-setup/), then adapt the [portable source template](https://kitkitkittt.github.io/research-wiki/guides/plugin-installation/). Otherwise, browse the [human-readable skill reference](https://kitkitkittt.github.io/research-wiki/skills/reference/) and use the patterns without claiming a live integration.
 
 ---
 Source file: guides/troubleshooting.md
@@ -586,7 +630,7 @@ Source file: guides/troubleshooting.md
 
 ## Authentication succeeds but tools are missing
 
-Tool discovery is caller-specific. Confirm the credential carries the required scope and that the tool's backing capability is ready. A neutral missing-tool response should not reveal restricted tool names.
+Tool discovery is caller-specific. Inspect authenticated `tools/list`, then `system.describe_capabilities` when exposed, for current callable tools and blockers. Confirm the key carries the required scope; static skill `ready` metadata is not live readiness. Discovery-only availability means **connected, research blocked**. A neutral missing-tool response should not reveal restricted tool names.
 
 ## Search returns no evidence
 
@@ -610,36 +654,36 @@ Source file: skills/index.md
 
 # Skills
 
-Skills are portable process contracts for AI clients. Read the [human reference](https://research.vnibb.xyz/skills/reference/), download canonical `SKILL.md` payloads individually, or copy them from the [portable source template](https://research.vnibb.xyz/plugins). This site does not configure a client or host an MCP service.
+Skills are portable process contracts for AI clients. Read the [human reference](https://kitkitkittt.github.io/research-wiki/skills/reference/), download canonical `SKILL.md` payloads individually, or copy them from the [portable source template](https://kitkitkittt.github.io/research-wiki/plugins). This site does not configure a client or host an MCP service.
 
 ## Setup
 
 | Skill | Trigger | Completion criterion |
 | --- | --- | --- |
-| [Setup and discovery](https://research.vnibb.xyz/skills/reference/#setup-and-discovery) | A client connects or diagnoses available capabilities | Authentication succeeds and only ready, permitted capabilities are selected |
+| [Setup and discovery](https://kitkitkittt.github.io/research-wiki/skills/reference/#setup-and-discovery) | A client connects or diagnoses available capabilities | Authentication succeeds and only ready, permitted capabilities are selected |
 
 ## Research
 
 | Skill | Trigger | Completion criterion |
 | --- | --- | --- |
-| [Evidence-first research](https://research.vnibb.xyz/skills/reference/#evidence-first-research) | A research question needs cited evidence | Every material claim has current authorized evidence or an explicit limitation |
-| [Company research](https://research.vnibb.xyz/skills/reference/#company-research) | One entity needs cross-source research | Entity and coverage are explicit; conclusions remain cited |
-| [Financial analysis](https://research.vnibb.xyz/skills/reference/#financial-analysis) | Statements, notes, metrics, ratios, or breakdowns | Every value retains complete dimensions and source evidence |
-| [Period comparison](https://research.vnibb.xyz/skills/reference/#period-comparison) | Values or claims need cross-period comparison | Every pair is dimension-compatible or explicitly non-comparable |
+| [Evidence-first research](https://kitkitkittt.github.io/research-wiki/skills/reference/#evidence-first-research) | A research question needs cited evidence | Every material claim has current authorized evidence or an explicit limitation |
+| [Company research](https://kitkitkittt.github.io/research-wiki/skills/reference/#company-research) | One entity needs cross-source research | Entity and coverage are explicit; conclusions remain cited |
+| [Financial analysis](https://kitkitkittt.github.io/research-wiki/skills/reference/#financial-analysis) | Statements, notes, metrics, ratios, or breakdowns | Every value retains complete dimensions and source evidence |
+| [Period comparison](https://kitkitkittt.github.io/research-wiki/skills/reference/#period-comparison) | Values or claims need cross-period comparison | Every pair is dimension-compatible or explicitly non-comparable |
 
 ## Evidence integrity
 
 | Skill | Trigger | Completion criterion |
 | --- | --- | --- |
-| [Citation audit](https://research.vnibb.xyz/skills/reference/#citation-audit) | Existing claims need verification | Every citation resolves and supports its claim, or the claim is marked unsupported |
-| [Table reconstruction](https://research.vnibb.xyz/skills/reference/#table-reconstruction) | A table spans pages or fragments | Every join is deterministic and cited; ambiguous fragments remain separate |
+| [Citation audit](https://kitkitkittt.github.io/research-wiki/skills/reference/#citation-audit) | Existing claims need verification | Every citation resolves and supports its claim, or the claim is marked unsupported |
+| [Table reconstruction](https://kitkitkittt.github.io/research-wiki/skills/reference/#table-reconstruction) | A table spans pages or fragments | Every join is deterministic and cited; ambiguous fragments remain separate |
 
 ## Source and analyst work
 
 | Skill | Trigger | Completion criterion |
 | --- | --- | --- |
-| [Source intake](https://research.vnibb.xyz/skills/reference/#source-intake) | A document enters governed evidence | Every unit is terminal and publication or withholding is explicit |
-| [Working project](https://research.vnibb.xyz/skills/reference/#working-project) | Cited evidence enters editable analyst work | Every project claim is cited or unresolved; notes never become authority |
+| [Source intake](https://kitkitkittt.github.io/research-wiki/skills/reference/#source-intake) | A document enters governed evidence | Every unit is terminal and publication or withholding is explicit |
+| [Working project](https://kitkitkittt.github.io/research-wiki/skills/reference/#working-project) | Cited evidence enters editable analyst work | Every project claim is cited or unresolved; notes never become authority |
 
 ## Installation
 
@@ -659,14 +703,14 @@ Use for a first connection or to diagnose authentication, permissions, and capab
 
 1. Load the entry skill.
 2. Authenticate through the client.
-3. Read the capability matrix.
-4. List tools visible to the current identity.
-5. Select only ready capabilities and stop on typed errors.
+3. Read authenticated `tools/list`, then call `system.describe_capabilities` only when exposed to this identity.
+4. Distinguish the REST `runtime-capabilities-v1` matrix from MCP `callable-capability-discovery-v1` output.
+5. Select currently callable tools and stop on typed errors. Static skill `ready` metadata and registry hashes are not runtime readiness or authorization.
 
-Completion requires successful scoped discovery without widening permissions or bypassing a disabled capability.
+Scoped discovery completes connection setup only. Discovery-only access is **connected, research blocked**. Research success requires an authorized search and citation re-fetch without widening permissions or bypassing a disabled capability.
 
-- [Download canonical skill](https://research.vnibb.xyz/skills/setup-and-discovery/SKILL.md)
-- [Open machine schema](https://research.vnibb.xyz/skills/setup-and-discovery/schema.json)
+- [Download canonical skill](https://kitkitkittt.github.io/research-wiki/downloads/skills/setup-and-discovery/SKILL.md)
+- [Open machine schema](https://kitkitkittt.github.io/research-wiki/skills/setup-and-discovery/schema.json)
 
 ## Evidence-first research {#evidence-first-research}
 
@@ -680,7 +724,7 @@ Use for source-backed questions, exact values, discovery, comparisons, and expli
 
 Completion requires current evidence for every material claim and number. Exact requests abstain rather than silently downgrade.
 
-[Download canonical skill](https://research.vnibb.xyz/downloads/skills/evidence-first-research/SKILL.md)
+[Download canonical skill](https://kitkitkittt.github.io/research-wiki/downloads/skills/evidence-first-research/SKILL.md)
 
 ## Company research {#company-research}
 
@@ -690,7 +734,7 @@ Resolve one stable identity, freeze the research scope, inspect coverage gaps, r
 
 Completion requires an unambiguous entity and current evidence or an explicit limitation for every conclusion.
 
-[Download canonical skill](https://research.vnibb.xyz/downloads/skills/company-research/SKILL.md)
+[Download canonical skill](https://kitkitkittt.github.io/research-wiki/downloads/skills/company-research/SKILL.md)
 
 ## Financial analysis {#financial-analysis}
 
@@ -700,7 +744,7 @@ Define complete financial dimensions, select the correct authority, fetch every 
 
 Completion requires reproducible values, named formula inputs, and citations for every narrative claim.
 
-[Download canonical skill](https://research.vnibb.xyz/downloads/skills/financial-analysis/SKILL.md)
+[Download canonical skill](https://kitkitkittt.github.io/research-wiki/downloads/skills/financial-analysis/SKILL.md)
 
 ## Period comparison {#period-comparison}
 
@@ -710,7 +754,7 @@ Resolve both periods, match dimensions, preserve restatements, fetch both source
 
 Completion requires every comparison to reproduce from cited source values.
 
-[Download canonical skill](https://research.vnibb.xyz/downloads/skills/period-comparison/SKILL.md)
+[Download canonical skill](https://kitkitkittt.github.io/research-wiki/downloads/skills/period-comparison/SKILL.md)
 
 ## Citation audit {#citation-audit}
 
@@ -720,7 +764,7 @@ Inventory claims, re-fetch citations, match exact source locations, check versio
 
 Completion requires one audit disposition for every material claim.
 
-[Download canonical skill](https://research.vnibb.xyz/downloads/skills/citation-audit/SKILL.md)
+[Download canonical skill](https://kitkitkittt.github.io/research-wiki/downloads/skills/citation-audit/SKILL.md)
 
 ## Table reconstruction {#table-reconstruction}
 
@@ -730,7 +774,7 @@ Preserve physical fragments, propose continuations from structural evidence, val
 
 Completion requires deterministic compatibility for every join. The fallback is separate cited fragments, never fabricated rectangular data.
 
-[Download canonical skill](https://research.vnibb.xyz/downloads/skills/table-reconstruction/SKILL.md)
+[Download canonical skill](https://kitkitkittt.github.io/research-wiki/downloads/skills/table-reconstruction/SKILL.md)
 
 ## Source intake {#source-intake}
 
@@ -740,7 +784,7 @@ Declare rights, resolve identity, submit immutable bytes once, monitor without e
 
 Completion requires a terminal disposition for every processing unit and explicit publication or withholding.
 
-[Download canonical skill](https://research.vnibb.xyz/downloads/skills/source-intake/SKILL.md)
+[Download canonical skill](https://kitkitkittt.github.io/research-wiki/downloads/skills/source-intake/SKILL.md)
 
 ## Working project {#working-project}
 
@@ -750,7 +794,7 @@ Define scope, collect references, label claim types, revalidate citations, prese
 
 Completion requires current evidence or an unresolved label for every material claim. Editable notes never become source authority.
 
-[Download canonical skill](https://research.vnibb.xyz/downloads/skills/working-project/SKILL.md)
+[Download canonical skill](https://kitkitkittt.github.io/research-wiki/downloads/skills/working-project/SKILL.md)
 
 ---
 Source file: skills/citation-audit/SKILL.md
@@ -893,10 +937,10 @@ Source file: skills/setup-and-discovery/SKILL.md
 
 Skill ID: `skill.setup-and-discovery`
 Version: `1.1.0`
-Capability content SHA-256: `92235c3af356e49a1c02c9f16665840f1ec6b2931ef4eb0633928b0363c9f2aa`
-Readiness: `ready`
+Registry entry SHA-256: `92235c3af356e49a1c02c9f16665840f1ec6b2931ef4eb0633928b0363c9f2aa` (unchanged upstream spec binding, not this document's checksum)
+Static descriptor readiness: `ready`; this public source metadata does not prove live research readiness or grant authority.
 
-Connect a scoped client and discover only ready capabilities.
+Connect a scoped client and discover current callable capabilities. These portable instructions are documentation, not a live capability response.
 
 ## Use when
 
@@ -914,10 +958,12 @@ Connect a scoped client and discover only ready capabilities.
 
 ## Safe sequence
 
-1. Load the entry skill.
-2. Read the capability matrix.
-3. List MCP tools visible to the current key.
-4. Stop on typed permission or readiness errors.
+1. Configure the absolute `/mcp/research-brain/` endpoint and a deployment-issued API key in the client's secret environment; a principal identifier is not a key. See [manual client setup](https://kitkitkittt.github.io/research-wiki/guides/mcp-setup/).
+2. Initialize the authenticated MCP session and send `notifications/initialized`.
+3. Read authenticated `tools/list`, then call `system.describe_capabilities` only if exposed to this caller.
+4. Select only tools currently reported callable. Static descriptors, hashes, and a successful discovery call do not establish research readiness.
+5. Complete one authorized search and re-fetch a returned citation before reporting research success. Discovery-only is **connected, research blocked**.
+6. Stop on typed permission or readiness errors; report missing tools and authority without silently widening access.
 
 ## Interfaces
 
@@ -925,8 +971,9 @@ Connect a scoped client and discover only ready capabilities.
 - REST: `GET /api/research-brain/mcp/catalog`
 - MCP: `system.describe_capabilities`
 - Input: `none`
-- Output: `runtime-capabilities-v1`
-- Machine schema: [`schema.json`](https://research.vnibb.xyz/skills/setup-and-discovery/schema.json)
+- REST runtime matrix output: `runtime-capabilities-v1`
+- MCP callable discovery output: `callable-capability-discovery-v1`
+- Machine schema: [`schema.json`](https://kitkitkittt.github.io/research-wiki/skills/setup-and-discovery/schema.json)
 
 ## Errors and abstention
 
@@ -947,6 +994,7 @@ Connect a scoped client and discover only ready capabilities.
 ## Limitations
 
 - A principal identifier is not an API key.
+- Retained `archive.list_documents`, `archive.search`, `archive.fetch`, and `archive.get_resources` are usable only when authenticated runtime discovery exposes them as callable. Follow the [archive document workflow](https://kitkitkittt.github.io/research-wiki/guides/agent-workflows/); it provides retained document evidence, not canonical company identity or authoritative numeric Financial Truth.
 
 ---
 Source file: skills/source-intake/SKILL.md
@@ -1035,6 +1083,8 @@ Source file: skills/setup-and-discovery/schema.json
 {
   "content_sha256": "92235c3af356e49a1c02c9f16665840f1ec6b2931ef4eb0633928b0363c9f2aa",
   "content_hash_scope": "capability-registry-entry",
+  "metadata_scope": "static-public-descriptor; content_sha256 binds the unchanged upstream registry entry, not these portable instructions or live readiness",
+  "runtime_readiness_source": "authenticated tools/list and system.describe_capabilities callable-capability-discovery-v1",
   "input_schema_ref": null,
   "mcp_tool_schemas": {
     "system.describe_capabilities": {
@@ -1049,6 +1099,7 @@ Source file: skills/setup-and-discovery/schema.json
       "name": "system.describe_capabilities",
       "output_schema": {
         "additionalProperties": true,
+        "schema_version_ref": "callable-capability-discovery-v1",
         "type": "object"
       },
       "readiness": "ready",
@@ -1060,7 +1111,10 @@ Source file: skills/setup-and-discovery/schema.json
     "system.describe_capabilities"
   ],
   "missing_mcp_tools": [],
-  "output_schema_ref": "runtime-capabilities-v1",
+  "output_schema_ref": "callable-capability-discovery-v1",
+  "rest_output_schema_refs": {
+    "GET /api/research-brain/runtime/capabilities": "runtime-capabilities-v1"
+  },
   "permitted_lanes": [
     "public",
     "analyst"
@@ -1084,7 +1138,7 @@ Source file: plugins/index.md
 
 # Portable agent template
 
-The [Research Wiki agent template](https://research.vnibb.xyz/plugins/research-wiki-agent) is a deployment-neutral directory of portable source files. It is not directly installable until a named client adapts the MCP and skill files through its supported custom-integration mechanisms.
+The [Research Wiki agent template](https://kitkitkittt.github.io/research-wiki/plugins/research-wiki-agent) is a deployment-neutral directory of portable source files. It is not directly installable until a named client adapts the MCP and skill files through its supported custom-integration mechanisms.
 
 ## Included
 
@@ -1093,7 +1147,7 @@ The [Research Wiki agent template](https://research.vnibb.xyz/plugins/research-w
 - nine public setup, research, evidence-integrity, source-intake, and working-project skills;
 - no credentials or private deployment values.
 
-Follow the [plugin installation guide](https://research.vnibb.xyz/guides/plugin-installation/). The repository validator checks that bundled skills are byte-identical to the canonical skill directories.
+Follow the [plugin installation guide](https://kitkitkittt.github.io/research-wiki/guides/plugin-installation/). The repository validator checks that bundled skills are byte-identical to the canonical skill directories.
 
 ---
 Source file: plugins/research-wiki-agent/index.md
@@ -1106,15 +1160,17 @@ This directory contains portable **source files**, not a client-vendor package a
 - `plugin.json` identifies the template version, `directInstall: false`, and relative artifact locations;
 - `mcp.json` supplies a remote Streamable HTTP placeholder;
 - `skills/*/SKILL.md` contains canonical agent process guidance;
-- `skills/setup-and-discovery/schema.json` describes its discovery response contract;
+- `skills/setup-and-discovery/schema.json` describes static capability/skill metadata and references separate REST and MCP discovery response contracts;
 - authentication remains in the client or deployment environment.
 
 ## Install
 
 1. Copy this directory to a temporary configuration workspace.
-2. Replace the placeholder MCP URL in `mcp.json`.
-3. Import the MCP JSON and skill directories using your client's documented custom-MCP and custom-skill mechanisms.
-4. If a client requires another manifest shape, adapt `plugin.json` at the client boundary while preserving `mcp.json` and the skill bytes.
+2. Replace the placeholder MCP URL in `mcp.json` with the absolute operator endpoint, preserving `/mcp/research-brain/` and the trailing slash.
+3. Import source files through the client's documented custom mechanisms. For Codex, use the [manual TOML and environment-variable setup](https://kitkitkittt.github.io/research-wiki/guides/mcp-setup/#manual-codex-setup), not generic JSON as Codex configuration.
+4. Configure a deployment-issued API-key Bearer token in the client secret environment. This hosted setup does not imply OAuth provisioning or provider bootstrap.
+5. If a client requires another manifest shape, adapt `plugin.json` at the client boundary while preserving the skill bytes.
+6. Run authenticated discovery and one authorized search plus citation re-fetch. Discovery-only is connected, research blocked, not successful research integration.
 
 No universal plugin-install format exists across AI clients. The public package documents its own file contract rather than claiming compatibility with an unnamed client.
 
@@ -1144,7 +1200,7 @@ Source file: plugins/research-wiki-agent/mcp.json
   "mcpServers": {
     "research-wiki": {
       "type": "streamable-http",
-      "url": "https://<your-host>/mcp/"
+      "url": "https://<your-host>/mcp/research-brain/"
     }
   }
 }
