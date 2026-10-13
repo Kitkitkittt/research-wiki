@@ -5,11 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="description" content="{{ page.description | default: site.description }}">
   <meta name="theme-color" content="#11130f">
-  <link rel="canonical" href="{{ site.public_url }}{{ page.url }}">
+  <link rel="canonical" href="{{ page.url | absolute_url }}">
   <meta property="og:type" content="website">
   <meta property="og:title" content="{% if page.title %}{{ page.title }} · {% endif %}{{ site.title }}">
   <meta property="og:description" content="{{ page.description | default: site.description }}">
-  <meta property="og:url" content="{{ site.public_url }}{{ page.url }}">
+  <meta property="og:url" content="{{ page.url | absolute_url }}">
   <title>{% if page.title %}{{ page.title }} · {% endif %}{{ site.title }}</title>
   <link rel="icon" href="{{ '/assets/mark.svg' | relative_url }}" type="image/svg+xml">
   <link rel="stylesheet" href="{{ '/assets/styles.css' | relative_url }}">
@@ -69,7 +69,7 @@
       <section class="docs-handoff">
         <span>HAND OFF TO AN AGENT</span>
         <p>Give an agent the documentation index URL for selective retrieval, or copy the complete public context bundle.</p>
-        <code>{{ site.public_url }}/llms.txt</code>
+        <code>{{ '/llms.txt' | absolute_url }}</code>
       </section>
     </article>
     <aside class="docs-toc" aria-label="On this page">

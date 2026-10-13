@@ -2,7 +2,7 @@
   "mcpServers": {
     "research-wiki": {
       "type": "streamable-http",
-      "url": "https://<your-host>/mcp/"
+      "url": "https://<your-host>/mcp/research-brain/"
     }
   }
 }

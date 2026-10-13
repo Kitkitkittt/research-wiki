@@ -15,13 +15,13 @@ Use for a first connection or to diagnose authentication, permissions, and capab
 
 1. Load the entry skill.
 2. Authenticate through the client.
-3. Read the capability matrix.
-4. List tools visible to the current identity.
-5. Select only ready capabilities and stop on typed errors.
+3. Read authenticated `tools/list`, then call `system.describe_capabilities` only when exposed to this identity.
+4. Distinguish the REST `runtime-capabilities-v1` matrix from MCP `callable-capability-discovery-v1` output.
+5. Select currently callable tools and stop on typed errors. Static skill `ready` metadata and registry hashes are not runtime readiness or authorization.
 
-Completion requires successful scoped discovery without widening permissions or bypassing a disabled capability.
+Scoped discovery completes connection setup only. Discovery-only access is **connected, research blocked**. Research success requires an authorized search and citation re-fetch without widening permissions or bypassing a disabled capability.
 
-- [Download canonical skill]({{ '/skills/setup-and-discovery/SKILL.md' | relative_url }})
+- [Download canonical skill]({{ '/downloads/skills/setup-and-discovery/SKILL.md' | relative_url }})
 - [Open machine schema]({{ '/skills/setup-and-discovery/schema.json' | relative_url }})
 
 ## Evidence-first research {#evidence-first-research}

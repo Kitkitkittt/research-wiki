@@ -32,10 +32,10 @@ research-wiki-agent/
 
 1. Confirm that your named AI client supports custom remote MCP configuration and custom skill files. Stop if either mechanism is unavailable.
 2. Copy [`plugins/research-wiki-agent`](../plugins/research-wiki-agent/) to a temporary workspace, not directly into a vendor plugin directory.
-3. Replace `https://<your-host>/mcp/` in `mcp.json` with the endpoint supplied by your operator.
+3. Replace `https://<your-host>/mcp/research-brain/` in `mcp.json` with the absolute endpoint supplied by your operator, preserving the canonical path and trailing slash.
 4. Import `mcp.json` through the client's custom MCP mechanism and each `skills/*/SKILL.md` through its custom skill mechanism.
-5. Configure authentication in the AI client or deployment integration, not in the template files.
-6. Start a new conversation and ask the client to list available Research Wiki tools and describe the evidence-first workflow.
+5. Configure authentication in the AI client's secret mechanism, not in the template files. For Codex, use the [manual environment-variable setup](mcp-setup.md#manual-codex-setup); do not import generic JSON as Codex TOML.
+6. Start a new conversation and request authenticated `tools/list` followed by callable capability discovery.
 
 ## Verify
 
@@ -44,9 +44,11 @@ The installation is complete when:
 - the client establishes one authenticated MCP session;
 - tool discovery returns only authorized tools;
 - the evidence-first research skill is available;
-- a discovery request returns a source reference;
-- opening the reference reproduces the cited evidence;
+- a currently callable, authorized research or retained archive search returns evidence with a citation;
+- re-fetching that citation reproduces the cited evidence;
 - no credential appears in the plugin directory.
+
+A connected session with discovery tools only is **research blocked**, not a completed installation for research. Public skill metadata and package hashes describe source compatibility, not live readiness or permission.
 
 ## Updates
 

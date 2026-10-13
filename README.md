@@ -19,7 +19,9 @@ Research Wiki is a deployment-neutral public reference for building evidence-fir
 - Setup skill: [`skills/setup-and-discovery/SKILL.md`](skills/setup-and-discovery/SKILL.md)
 - Setup schema: [`skills/setup-and-discovery/schema.json`](skills/setup-and-discovery/schema.json)
 
-Give an agent the deployed `llms.txt` URL for selective retrieval. The documentation UI also provides **Copy all for agent** for the complete public context.
+Public agent entry: <https://kitkitkittt.github.io/research-wiki/llms.txt>. Raw skills use the same unauthenticated Pages origin. The hosted authenticated MCP endpoint is separate: `https://research.vnibb.xyz/mcp/research-brain/`.
+
+For useful research: [configure Codex with an environment-held API key](guides/mcp-setup.md#manual-codex-setup), run authenticated tool and callable-capability discovery, then search and re-fetch one citation. A discovery-only connection is **research blocked**, not research success. [Retained archive evidence](guides/agent-workflows.md#retained-archive-document-evidence) is available only when authorized runtime discovery exposes its tools; it is not canonical company data or Financial Truth.
 
 ## Principles
 
@@ -39,7 +41,6 @@ The public source and validator are dependency-free. GitHub Pages builds the Mar
 
 ```bash
 python3 scripts/validate_public.py --site-url https://kitkitkittt.github.io/research-wiki/
-python3 scripts/validate_public.py --public-alias-url https://research.vnibb.xyz/
 ```
 
 ## Contributing

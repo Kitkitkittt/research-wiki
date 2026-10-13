@@ -15,7 +15,7 @@ permalink: /guides/troubleshooting/
 
 ## Authentication succeeds but tools are missing
 
-Tool discovery is caller-specific. Confirm the credential carries the required scope and that the tool's backing capability is ready. A neutral missing-tool response should not reveal restricted tool names.
+Tool discovery is caller-specific. Inspect authenticated `tools/list`, then `system.describe_capabilities` when exposed, for current callable tools and blockers. Confirm the key carries the required scope; static skill `ready` metadata is not live readiness. Discovery-only availability means **connected, research blocked**. A neutral missing-tool response should not reveal restricted tool names.
 
 ## Search returns no evidence
 
