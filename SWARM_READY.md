@@ -21,11 +21,7 @@ If a `swarm-ready` skill is installed, load it. Otherwise execute the documented
 
 ## Repository starting point
 
-Read: [AGENTS.md](AGENTS.md), [README.md](README.md), [docs](docs), [scripts](scripts), [.github](.github).
-
-Improve one public evidence or navigation gap while preserving docs/how-evidence-works.md.
-
-Keep examples deployment-neutral, resolve local links and run the existing public-content validator. Never publish private operations or owner data.
+Start with [AGENTS.md](AGENTS.md), [README.md](README.md), and the nearest guide or skill. Keep the work to public source documentation. For an evidence or navigation change, preserve [How evidence works](docs/how-evidence-works.md): derived views are not source authority. Keep examples deployment-neutral and use invented data.
 
 The base above is an inspection snapshot, not a permanent working branch. Refresh the actual target branch, current issues, incumbent worker and applicable nested instructions before editing. Preserve unrelated changes and upstream/fork boundaries.
 
@@ -41,11 +37,14 @@ The base above is an inspection snapshot, not a permanent working branch. Refres
 
 ## Verification starting point
 
-| Declared command | Source and limit |
-| --- | --- |
-| `python3 scripts/validate_public.py` | AGENTS.md |
+Run the [required public validator](CONTRIBUTING.md#validation) from the checkout root:
 
-The declared commands come from source. For this documentation change, `python3 scripts/validate_public.py` passed with exit 0 on the pinned full source tree and again with this handoff added. Other application/runtime checks were not run. Build, syntax and lint success are not functional acceptance. Confirm the current setup, lockfile, hooks, required services and focused test scope before running.
+```bash
+python3 scripts/validate_public.py
+git diff --check
+```
+
+The standard-library validator checks local links and anchors, public-content rules, skill metadata, JSON, and consistency of the public agent indexes. For source-only acceptance, use it without `--site-url`; that option requests a deployed site. Do not exercise the hosted MCP service, publish Pages, or commit generated `_site` output. The [Pages workflow](.github/workflows/pages.yml) builds and validates exports on pull requests; a push to `main` also reaches its deployment job.
 
 ## Required handoff result
 
