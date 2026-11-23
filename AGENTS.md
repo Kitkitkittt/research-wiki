@@ -2,6 +2,8 @@
 
 Use this repository only for public Research Wiki documentation, reusable skills, plugin templates, and static-site assets.
 
+For a bounded swarm task in this checkout, use [SWARM_READY.md](SWARM_READY.md) for source acceptance and the publication boundary. The public agent indexes serve readers of the wiki, not repository contributors.
+
 Before editing:
 
 1. Read `README.md` and the nearest guide or skill.
